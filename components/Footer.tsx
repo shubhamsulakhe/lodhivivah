@@ -15,8 +15,8 @@ export default function Footer() {
             </p>
             <div className="flex gap-3 mt-5">
               {[
-                { label: 'WhatsApp', href: 'https://wa.me/91918770607574', color: 'bg-green-600', icon: '💬' },
-                { label: 'Call',     href: 'tel:+91918770607574',          color: 'bg-saffron-600', icon: '📞' },
+                { label: 'WhatsApp', href: 'https://wa.me/918770607574', color: 'bg-green-600', icon: '💬' },
+                { label: 'Call',     href: 'tel:+918770607574',          color: 'bg-saffron-600', icon: '📞' },
               ].map(({ label, href, color, icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer"
                    className={`${color} text-white text-xs font-semibold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity`}>

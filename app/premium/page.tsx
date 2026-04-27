@@ -56,7 +56,7 @@ const PLANS = [
 ]
 
 const UPI_ID = 'shubhamsulakhe111-3@oksbi'      // ← change to your real UPI id
-const WHATSAPP = '91918770607574'      // ← your number
+const WHATSAPP = '918770607574'      // ← your number
 
 export default function PremiumPage() {
   const [user, setUser] = useState<any>(null)
