@@ -403,7 +403,7 @@ export default function HomePage() {
               Register Now — Free
               <ArrowRight className="w-5 h-5 text-saffron-500 group-hover:translate-x-1 transition-transform"/>
             </Link>
-            <a href="https://wa.me/919424741980" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/91918770607574" target="_blank" rel="noopener noreferrer"
                className="btn btn-xl glass text-white border border-white/30 hover:bg-white/20">
               <Phone className="w-5 h-5"/> WhatsApp करें
             </a>
