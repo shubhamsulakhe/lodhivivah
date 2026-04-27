@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --saffron: #f97316;
+    --saffron-dark: #c2410c;
+    --maroon: #9f1239;
+    --gold: #f59e0b;
+    --cream: #fffbf5;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-cream font-sans text-stone-800 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  ::selection { background: #fed7aa; color: #7c2d12; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #fff8f1; }
+  ::-webkit-scrollbar-thumb { @apply bg-saffron-300 rounded-full; }
+}
+
+@layer components {
+
+  /* ── Logo ─────────────────────────────────────── */
+  .logo-ring {
+    background: conic-gradient(from 0deg, #f97316, #fbbf24, #f43f5e, #f97316);
+    padding: 2px;
+    border-radius: 50%;
+  }
+  .logo-inner {
+    @apply bg-white rounded-full flex items-center justify-center;
+  }
+
+  /* ── Buttons ──────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-2xl
+           transition-all duration-200 active:scale-95 disabled:opacity-50
+           disabled:cursor-not-allowed focus:outline-none;
+  }
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-saffron-600 to-saffron-500
+           text-white shadow-glow hover:shadow-card-hover hover:from-saffron-700 hover:to-saffron-600
+           focus:ring-2 focus:ring-saffron-500 focus:ring-offset-2;
+  }
+  .btn-outline {
+    @apply btn border-2 border-saffron-500 text-saffron-600 bg-white
+           hover:bg-saffron-50 hover:border-saffron-600
+           focus:ring-2 focus:ring-saffron-500 focus:ring-offset-2;
+  }
+  .btn-white {
+    @apply btn bg-white text-saffron-700 shadow-soft
+           hover:bg-saffron-50 hover:shadow-card-hover
+           focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-saffron-600;
+  }
+  .btn-ghost {
+    @apply btn text-stone-600 hover:text-saffron-600 hover:bg-saffron-50 rounded-xl px-4 py-2;
+  }
+  .btn-sm   { @apply px-4 py-2 text-sm; }
+  .btn-md   { @apply px-6 py-3 text-sm; }
+  .btn-lg   { @apply px-8 py-4 text-base; }
+  .btn-xl   { @apply px-10 py-5 text-lg; }
+
+  /* ── Cards ────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-3xl border border-stone-100 shadow-card;
+  }
+  .card-hover {
+    @apply hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 cursor-pointer;
+  }
+
+  /* ── Inputs ───────────────────────────────────── */
+  .input {
+    @apply w-full px-4 py-3 bg-white border border-stone-200 rounded-2xl text-stone-800
+           placeholder:text-stone-400 text-sm font-medium
+           focus:outline-none focus:ring-2 focus:ring-saffron-500 focus:border-transparent
+           transition-all duration-200;
+  }
+  .select { @apply input appearance-none cursor-pointer; }
+  .label  { @apply block text-sm font-semibold text-stone-700 mb-1.5; }
+
+  /* ── Section ──────────────────────────────────── */
+  .section { @apply py-20; }
+  .container { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+  .section-tag { @apply text-saffron-600 text-xs font-bold uppercase tracking-widest; }
+  .section-title { @apply text-3xl sm:text-4xl font-bold text-stone-900 mt-2; }
+  .section-sub { @apply text-stone-500 mt-3 text-lg; }
+
+  /* ── Profile Card ─────────────────────────────── */
+  .profile-card {
+    @apply card card-hover overflow-hidden;
+  }
+  .profile-card-gold { @apply ring-2 ring-yellow-400; box-shadow: 0 0 32px rgba(251,191,36,0.3);
+  
+  }
+
+  /* ── Badge ────────────────────────────────────── */
+  .badge { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold; }
+  .badge-gold     { @apply badge bg-yellow-100 text-yellow-700; }
+  .badge-silver   { @apply badge bg-blue-100 text-blue-700; }
+  .badge-verified { @apply badge bg-emerald-100 text-emerald-700; }
+  .badge-pending  { @apply badge bg-orange-100 text-orange-700; }
+  .badge-female   { @apply badge bg-pink-100 text-pink-700; }
+  .badge-male     { @apply badge bg-blue-100 text-blue-700; }
+
+  /* ── Skeleton ─────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(90deg, #f0ece8 25%, #e8e2dc 50%, #f0ece8 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ── Stat Card ────────────────────────────────── */
+  .stat-card {
+    @apply card p-6 text-center;
+  }
+  .stat-value { @apply text-4xl font-black text-saffron-600; }
+  .stat-label { @apply text-stone-500 text-sm font-medium mt-1; }
+
+  /* ── Nav Active ───────────────────────────────── */
+  .nav-link-active {
+    @apply text-saffron-600 font-semibold;
+  }
+
+  /* ── Step ─────────────────────────────────────── */
+  .step-active    { @apply bg-saffron-500 text-white shadow-glow; }
+  .step-done      { @apply bg-emerald-500 text-white; }
+  .step-inactive  { @apply bg-stone-200 text-stone-400; }
+
+  /* ── Form Section ─────────────────────────────── */
+  .form-section {
+    @apply bg-saffron-50 rounded-2xl p-5 border border-saffron-100;
+  }
+  .form-section-title {
+    @apply text-sm font-bold text-saffron-800 mb-4 flex items-center gap-2;
+  }
+}
+
+/* ── Hero Glow Effect ─────────────────────────────── */
+.hero-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.4) 0%, transparent 70%);
+}
+
+/* ── Gradient Text ────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #f97316, #fbbf24, #f43f5e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glass Effect ─────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ── Animated Border ──────────────────────────────── */
+.animated-border {
+  background: linear-gradient(white, white) padding-box,
+              conic-gradient(from 0deg, #f97316, #fbbf24, #f43f5e, #f97316) border-box;
+  border: 2px solid transparent;
+  animation: spin-slow 4s linear infinite;
+}
+
+/* ── Pattern BG ───────────────────────────────────── */
+.pattern-bg {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(249,115,22,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(159,18,57,0.05) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f97316' fill-opacity='0.03'%3E%3Cpath d='M20 20.5V18H0v5h5v5H0v5h20v-5h-5v-5h5v-2.5zM20 5V0H0v5h5v5H0v5h20v-5h-5V5h5V2.5zM40 20.5V18H20v5h5v5h-5v5h20v-5h-5v-5h5v-2.5zM40 5V0H20v5h5v5h-5v5h20v-5h-5V5h5V2.5z'/%3E%3C/g%3E%3C/svg%3E");
+}
