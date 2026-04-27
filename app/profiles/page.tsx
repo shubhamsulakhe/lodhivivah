@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import Navbar from '@/components/Navbar'
@@ -9,7 +10,7 @@ import toast from 'react-hot-toast'
 import { EDUCATION, STATES } from '@/lib/utils'
 import { useSearchParams } from 'next/navigation'
 
-export default function ProfilesPage() {
+function ProfilesContent() {
   const params = useSearchParams()
   const [profiles, setProfiles]       = useState<any[]>([])
   const [loading, setLoading]         = useState(true)
@@ -67,8 +68,6 @@ export default function ProfilesPage() {
     const { data, error } = await q
     setLoading(false)
     if (error) { toast.error('Error loading profiles'); return }
-
-    // Remove own profile
     const toExclude = excludeId ?? myProfileId
     setProfiles((data || []).filter(p => p.id !== toExclude))
   }
@@ -82,7 +81,7 @@ export default function ProfilesPage() {
       return
     }
     setSent(prev => new Set(Array.from(prev).concat(receiverId)))
-toast.success('Interest भेज दिया! 💝')
+    toast.success('Interest भेज दिया! 💝')
   }
 
   const setF = (k: string, v: string) => setFilters(p => ({ ...p, [k]: v }))
@@ -93,7 +92,6 @@ toast.success('Interest भेज दिया! 💝')
     <>
       <Navbar />
       <main className="pt-20 min-h-screen bg-cream">
-        {/* Header */}
         <div className="bg-gradient-to-r from-saffron-800 via-saffron-700 to-saffron-500 py-12">
           <div className="container">
             <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Find Your Match 💑</h1>
@@ -102,7 +100,6 @@ toast.success('Interest भेज दिया! 💝')
         </div>
 
         <div className="container py-8">
-          {/* Gender tabs + filter toggle */}
           <div className="flex gap-3 mb-5 flex-wrap items-center">
             {[{ v: '', l: 'All Profiles' }, { v: 'female', l: '♀ Brides' }, { v: 'male', l: '♂ Grooms' }].map(({ v, l }) => (
               <button key={v}
@@ -121,7 +118,6 @@ toast.success('Interest भेज दिया! 💝')
             </button>
           </div>
 
-          {/* Filter panel */}
           {showFilters && (
             <div className="card p-5 mb-6">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
@@ -166,7 +162,6 @@ toast.success('Interest भेज दिया! 💝')
             </div>
           )}
 
-          {/* Grid */}
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => <ProfileCardSkeleton key={i} />)}
@@ -191,5 +186,17 @@ toast.success('Interest भेज दिया! 💝')
       </main>
       <Footer />
     </>
+  )
+}
+
+export default function ProfilesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
+      </div>
+    }>
+      <ProfilesContent />
+    </Suspense>
   )
 }

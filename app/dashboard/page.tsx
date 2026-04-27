@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
@@ -12,7 +13,7 @@ import {
 import { getAge } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router  = useRouter()
   const params  = useSearchParams()
   const [profile, setProfile]     = useState<any>(null)
@@ -128,10 +129,10 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { icon: Heart,       label: 'Interests Received', value: interests.length,                                     color: 'bg-pink-50 text-pink-600' },
-              { icon: CheckCircle, label: 'Accepted',           value: interests.filter(i => i.status === 'accepted').length, color: 'bg-emerald-50 text-emerald-600' },
-              { icon: Users,       label: 'Sent Interests',     value: sent.length,                                          color: 'bg-purple-50 text-purple-600' },
-              { icon: Eye,         label: 'Pending',            value: pendingReceived.length,                               color: 'bg-orange-50 text-orange-600' },
+              { icon: Heart,       label: 'Interests Received', value: interests.length,                                      color: 'bg-pink-50 text-pink-600' },
+              { icon: CheckCircle, label: 'Accepted',           value: interests.filter(i => i.status === 'accepted').length,  color: 'bg-emerald-50 text-emerald-600' },
+              { icon: Users,       label: 'Sent Interests',     value: sent.length,                                           color: 'bg-purple-50 text-purple-600' },
+              { icon: Eye,         label: 'Pending',            value: pendingReceived.length,                                color: 'bg-orange-50 text-orange-600' },
             ].map(({ icon: Icon, label, value, color }) => (
               <div key={label} className="card p-5 text-center">
                 <div className={`w-10 h-10 rounded-2xl ${color} flex items-center justify-center mx-auto mb-3`}>
@@ -280,5 +281,17 @@ export default function DashboardPage() {
       </main>
       <Footer />
     </>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }
