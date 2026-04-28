@@ -13,7 +13,7 @@ export default function Logo({ variant = 'dark', size = 'md', className }: LogoP
     md: { icon: 40, title: 'text-lg',   sub: 'text-[11px]' },
     lg: { icon: 52, title: 'text-2xl',  sub: 'text-sm' },
   }
-  const s = sizes[size]
+  const s = sizes[size] || sizes['md']
 
   return (
     <Link href="/" className={cn('flex items-center gap-3 group', className)}>

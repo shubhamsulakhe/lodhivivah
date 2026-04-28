@@ -78,7 +78,7 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-14 animate-fade-up-4">
-              <Link href="/register"
+              <Link href="/login"
                 className="btn btn-white btn-xl group">
                 <Heart className="w-5 h-5 text-saffron-500 fill-saffron-400 group-hover:scale-110 transition-transform"/>
                 Register Free — अभी जुड़ें
@@ -191,7 +191,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-12 text-center">
-            <Link href="/register" className="btn btn-primary btn-lg">
+            <Link href="/login" className="btn btn-primary btn-lg">
               <Heart className="w-5 h-5"/> अभी शुरू करें — Register Free
             </Link>
           </div>
@@ -398,7 +398,7 @@ export default function HomePage() {
             अभी जुड़ें और अपना जीवनसाथी खोजें। Registration पूरी तरह मुफ्त है।
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register" className="btn btn-white btn-xl group">
+            <Link href="/login" className="btn btn-white btn-xl group">
               <Heart className="w-5 h-5 text-saffron-500 fill-saffron-400"/>
               Register Now — Free
               <ArrowRight className="w-5 h-5 text-saffron-500 group-hover:translate-x-1 transition-transform"/>

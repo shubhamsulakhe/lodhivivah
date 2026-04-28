@@ -60,7 +60,7 @@ export default function Navbar() {
       <div className="container h-18 flex items-center justify-between py-3">
 
         {/* Logo */}
-        <Logo variant={transparent ? 'light' : 'dark'} />
+        <Logo variant={transparent ? 'light' : 'dark'} size="md" />
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-1">
@@ -132,7 +132,7 @@ export default function Navbar() {
                   transparent ? 'text-white hover:bg-white/15' : 'text-stone-600 hover:bg-stone-50')}>
                 Login
               </Link>
-              <Link href="/register" className="btn btn-white btn-sm">
+              <Link href="/login" className="btn btn-white btn-sm">
                 Register Free ✦
               </Link>
             </>
