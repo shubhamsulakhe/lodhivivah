@@ -188,7 +188,11 @@ export default function LoginPage() {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Home
           </Link>
 
-          <div className="lg:hidden flex justify-center mb-6 pt-4"><Logo size="md" /></div>
+          <div className="lg:hidden flex justify-center mb-6 pt-4">
+            <div className="bg-gradient-to-br from-saffron-600 to-saffron-800 px-6 py-4 rounded-2xl">
+              <Logo size="md" variant="light" />
+            </div>
+          </div>
 
           {/* Progress indicator */}
           <div className="flex items-center gap-2 mb-8">
