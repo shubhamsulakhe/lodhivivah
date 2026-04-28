@@ -11,21 +11,21 @@ import { EDUCATION, STATES } from '@/lib/utils'
 import Link from 'next/link'
 
 function ProfilesContent() {
-  const [profiles, setProfiles]         = useState<any[]>([])
-  const [loading, setLoading]           = useState(true)
-  const [myProfile, setMyProfile]       = useState<any>(null)
-  const [sentInterests, setSent]        = useState<Set<string>>(new Set())
-  const [showFilters, setShowFilters]   = useState(false)
-  const [isLoggedIn, setIsLoggedIn]     = useState(false)
-  const [isPremium, setIsPremium]       = useState(false)
-  const [dailyCount, setDailyCount]     = useState(0)
-  const [filters, setFilters]           = useState({
+  const [profiles, setProfiles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [myProfile, setMyProfile] = useState<any>(null)
+  const [sentInterests, setSent] = useState<Set<string>>(new Set())
+  const [showFilters, setShowFilters] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isPremium, setIsPremium] = useState(false)
+  const [dailyCount, setDailyCount] = useState(0)
+  const [filters, setFilters] = useState({
     state: '', education: '', age_min: '', age_max: '',
   })
 
-  const FREE_PROFILE_LIMIT    = 10
-  const FREE_INTEREST_LIMIT   = 2
-  const GUEST_PROFILE_LIMIT   = 4
+  const FREE_PROFILE_LIMIT = 10
+  const FREE_INTEREST_LIMIT = 2
+  const GUEST_PROFILE_LIMIT = 4
 
   useEffect(() => { initPage() }, [])
 
@@ -65,36 +65,35 @@ function ProfilesContent() {
         .single()
       setDailyCount(limit?.count || 0)
 
-    // Check if admin
-const { data: adminCheck } = await supabase
-  .from('admin_users')
-  .select('id')
-  .eq('user_id', user.id)
-  .single()
+      // Check if admin
+      const { data: adminCheck } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
 
-if (adminCheck) {
-  // Admin sees all profiles
-  fetchAllProfilesForAdmin()
-} else {
-  fetchProfiles(mine)
-}
-
-async function fetchAllProfilesForAdmin() {
-  setLoading(true)
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
-    .limit(200)
-
-  setLoading(false)
-  if (error) { toast.error('Error loading'); return }
-  setProfiles(data || [])
-  setIsPremium(true) // Admin gets premium view
-}
-      
+      if (adminCheck) {
+        // Admin sees all profiles
+        fetchAllProfilesForAdmin()
+      } else {
+        fetchProfiles(mine)
+      }
     }
+  }
+
+  async function fetchAllProfilesForAdmin() {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(200)
+
+    setLoading(false)
+    if (error) { toast.error('Error loading'); return }
+    setProfiles(data || [])
+    setIsPremium(true) // Admin gets premium view
   }
 
   async function fetchGuestProfiles() {
@@ -122,7 +121,7 @@ async function fetchAllProfilesForAdmin() {
       .neq('id', mine.id)
 
     // Apply filters
-    if (filters.state)     q = q.eq('state', filters.state)
+    if (filters.state) q = q.eq('state', filters.state)
     if (filters.education) q = q.eq('education', filters.education)
     if (filters.age_min) {
       const d = new Date(); d.setFullYear(d.getFullYear() - Number(filters.age_min))
@@ -142,11 +141,11 @@ async function fetchAllProfilesForAdmin() {
     if (!mine.is_premium) {
       // Free member: smart random 10
       // Priority: same state first
-      const sameState  = result.filter(p => p.state === mine.state)
+      const sameState = result.filter(p => p.state === mine.state)
       const otherState = result.filter(p => p.state !== mine.state)
 
       // Shuffle both groups
-      const shuffledSame  = sameState.sort(() => Math.random() - 0.5)
+      const shuffledSame = sameState.sort(() => Math.random() - 0.5)
       const shuffledOther = otherState.sort(() => Math.random() - 0.5)
 
       // Take up to 6 from same state, rest from other
@@ -202,7 +201,7 @@ async function fetchAllProfilesForAdmin() {
     toast.success('Interest भेज दिया! 💝')
   }
 
-  const setF   = (k: string, v: string) => setFilters(p => ({ ...p, [k]: v }))
+  const setF = (k: string, v: string) => setFilters(p => ({ ...p, [k]: v }))
   const clearF = () => setFilters({ state: '', education: '', age_min: '', age_max: '' })
   const activeCount = Object.values(filters).filter(Boolean).length
 
