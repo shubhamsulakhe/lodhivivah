@@ -66,7 +66,7 @@ export default function LoginPage() {
       toast.success('OTP sent! Check your email.')
       setStep('otp')
       setOtp(['', '', '', '', '', ''])
-      setCountdown(30)
+      setCountdown(120)
       setTimeout(() => otpRefs.current[0]?.focus(), 100)
     } catch (e: any) {
       toast.error(e.message || 'Failed to send OTP')
