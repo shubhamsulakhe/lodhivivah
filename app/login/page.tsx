@@ -152,10 +152,10 @@ export default function LoginPage() {
           <h2 className="text-white font-black text-3xl leading-tight mb-4">
             Find Your<br />Perfect Match
           </h2>
-          <p className="text-white/70 text-lg leading-relaxed max-w-xs">
+          <p className="text-white/70 text-lg leading-relaxed max-w-xs text-center mx-auto">
             Join thousands of Lodhi Samaj members finding their life partners.
           </p>
-          <div className="mt-10 grid grid-cols-2 gap-4">
+          <div className="mt-10 grid grid-cols-2 gap-4 w-full max-w-xs mx-auto">
             {[
               { val: '2000+', lbl: 'Profiles' },
               { val: '500+', lbl: 'Marriages' },
@@ -188,7 +188,7 @@ export default function LoginPage() {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Home
           </Link>
 
-          <div className="lg:hidden mb-8"><Logo size="md" /></div>
+          <div className="lg:hidden flex justify-center mb-8"><Logo size="md" /></div>
 
           {/* Progress indicator */}
           <div className="flex items-center gap-2 mb-8">

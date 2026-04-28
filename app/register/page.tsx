@@ -10,57 +10,54 @@ import { EDUCATION, OCCUPATION, STATES, MP_DISTRICTS, GOTRA, INCOME, HEIGHTS } f
 import { Suspense } from 'react'
 
 const STEPS = [
-  { id: 0, title: 'Personal',   icon: '👤', desc: 'Basic information' },
-  { id: 1, title: 'Education',  icon: '🎓', desc: 'Education & career' },
-  { id: 2, title: 'Family',     icon: '👨‍👩‍👧', desc: 'Family details' },
-  { id: 3, title: 'Location',   icon: '📍', desc: 'Where you live' },
-  { id: 4, title: 'Photo',      icon: '📸', desc: 'Profile photo' },
+  { id: 0, title: 'Personal', icon: '👤', desc: 'Basic information' },
+  { id: 1, title: 'Education', icon: '🎓', desc: 'Education & career' },
+  { id: 2, title: 'Family', icon: '👨‍👩‍👧', desc: 'Family details' },
+  { id: 3, title: 'Location', icon: '📍', desc: 'Where you live' },
+  { id: 4, title: 'Photo', icon: '📸', desc: 'Profile photo' },
 ]
 
 const INIT = {
-  name:'', gender:'female', date_of_birth:'', height_cm:160,
-  complexion:'fair', marital_status:'never_married', about_me:'',
-  education:'', education_detail:'', occupation:'', occupation_detail:'', annual_income:'',
-  father_name:'', father_occupation:'', mother_name:'', gotra:'', manglik:false,
-  city:'', district:'', state:'Madhya Pradesh', phone:'', whatsapp:'',
+  name: '', gender: 'female', date_of_birth: '', height_cm: 160,
+  complexion: 'fair', marital_status: 'never_married', about_me: '',
+  education: '', education_detail: '', occupation: '', occupation_detail: '', annual_income: '',
+  father_name: '', father_occupation: '', mother_name: '', gotra: '', manglik: false,
+  city: '', district: '', state: 'Madhya Pradesh', phone: '', whatsapp: '',
 }
 
 function RegisterContent() {
-  const router  = useRouter()
-  const params  = useSearchParams()
-  const [step, setStep]         = useState(0)
-  const [form, setForm]         = useState(INIT)
-  const [loading, setLoading]   = useState(false)
-  const [checkingAuth, setChecking] = useState(true)
-  const [photoFile, setPhoto]   = useState<File|null>(null)
+  const router = useRouter()
+  const params = useSearchParams()
+  const [step, setStep] = useState(0)
+  const [form, setForm] = useState(INIT)
+  const [loading, setLoading] = useState(false)
+  const [photoFile, setPhoto] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState('')
-  const [userId, setUserId]     = useState('')
+  const [userId, setUserId] = useState('')
 
   // Check if user is logged in (came from login flow)
   useEffect(() => {
     checkAuth()
   }, [])
 
-  async function checkAuth() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      toast.error('Please verify your email first')
-      router.push('/login')
-      return
-    }
-    setUserId(user.id)
+async function checkAuth() {
+  const { data: { user } } = await supabase.auth.getUser()
 
-    // Check if profile already exists
-    const { data: existing } = await supabase
-      .from('profiles').select('id').eq('user_id', user.id).single()
-    if (existing) {
-      router.push('/dashboard')
-      return
-    }
-
-    // Pre-fill email info
-    setChecking(false)
+  if (!user) {
+    // Not logged in — show form, verify at submit time
+    return
   }
+
+  setUserId(user.id)
+
+  // If profile already exists go to dashboard
+  const { data: existing } = await supabase
+    .from('profiles').select('id').eq('user_id', user.id).single()
+  if (existing) {
+    router.push('/dashboard')
+    return
+  }
+}
 
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }))
 
@@ -92,6 +89,13 @@ function RegisterContent() {
   }
 
   async function handleSubmit() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error('Please verify your email first')
+      router.push('/login')
+      return
+    }
+    setUserId(user.id)
     setLoading(true)
     try {
       let photo_url = ''
@@ -137,15 +141,6 @@ function RegisterContent() {
     else handleSubmit()
   }
 
-  if (checkingAuth) return (
-    <div className="min-h-screen flex items-center justify-center bg-cream">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin mx-auto mb-4"/>
-        <p className="text-stone-500">Verifying your account...</p>
-      </div>
-    </div>
-  )
-
   const progress = ((step + 1) / STEPS.length) * 100
 
   return (
@@ -154,9 +149,9 @@ function RegisterContent() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Logo size="sm"/>
+          <Logo size="sm" />
           <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-semibold">
-            <ShieldCheck className="w-4 h-4"/>
+            <ShieldCheck className="w-4 h-4" />
             Email Verified
           </div>
         </div>
@@ -168,10 +163,10 @@ function RegisterContent() {
               <div key={s.id} className="flex flex-col items-center flex-1">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
                                  transition-all duration-300 shadow-sm
-                  ${i < step  ? 'bg-emerald-500 text-white'
-                  : i === step ? 'bg-saffron-500 text-white shadow-glow scale-110'
-                  : 'bg-stone-200 text-stone-400'}`}>
-                  {i < step ? <Check className="w-5 h-5"/> : s.icon}
+                  ${i < step ? 'bg-emerald-500 text-white'
+                    : i === step ? 'bg-saffron-500 text-white shadow-glow scale-110'
+                      : 'bg-stone-200 text-stone-400'}`}>
+                  {i < step ? <Check className="w-5 h-5" /> : s.icon}
                 </div>
                 <span className={`text-xs mt-1.5 hidden sm:block font-semibold
                   ${i === step ? 'text-saffron-600' : i < step ? 'text-emerald-600' : 'text-stone-400'}`}>
@@ -182,10 +177,10 @@ function RegisterContent() {
           </div>
           <div className="h-2 bg-stone-200 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-saffron-600 to-saffron-400 rounded-full transition-all duration-500"
-                 style={{ width: `${progress}%` }}/>
+              style={{ width: `${progress}%` }} />
           </div>
           <div className="flex justify-between mt-1">
-            <p className="text-xs text-stone-400">Step {step+1} of {STEPS.length}</p>
+            <p className="text-xs text-stone-400">Step {step + 1} of {STEPS.length}</p>
             <p className="text-xs text-saffron-600 font-semibold">{Math.round(progress)}% complete</p>
           </div>
         </div>
@@ -205,13 +200,13 @@ function RegisterContent() {
               <div>
                 <label className="label">Full Name *</label>
                 <input type="text" className="input" placeholder="Your full name"
-                  value={form.name} onChange={e => set('name', e.target.value)}/>
+                  value={form.name} onChange={e => set('name', e.target.value)} />
               </div>
               <div>
                 <label className="label">Profile For *</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {[['female','♀ Bride (Vadhu)','from-pink-400 to-rose-500'],
-                    ['male','♂ Groom (Var)','from-blue-400 to-blue-600']].map(([v,lbl,grad]) => (
+                  {[['female', '♀ Bride (Vadhu)', 'from-pink-400 to-rose-500'],
+                  ['male', '♂ Groom (Var)', 'from-blue-400 to-blue-600']].map(([v, lbl, grad]) => (
                     <button key={v} type="button" onClick={() => set('gender', v)}
                       className={`py-4 rounded-2xl border-2 font-bold text-sm transition-all duration-200
                         ${form.gender === v
@@ -226,8 +221,8 @@ function RegisterContent() {
                 <div>
                   <label className="label">Date of Birth *</label>
                   <input type="date" className="input"
-                    max={new Date(Date.now()-18*365*24*60*60*1000).toISOString().split('T')[0]}
-                    value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)}/>
+                    max={new Date(Date.now() - 18 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                    value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} />
                 </div>
                 <div>
                   <label className="label">Height</label>
@@ -240,7 +235,7 @@ function RegisterContent() {
                 <div>
                   <label className="label">Complexion</label>
                   <select className="select" value={form.complexion} onChange={e => set('complexion', e.target.value)}>
-                    {[['very_fair','Very Fair'],['fair','Fair'],['wheatish','Wheatish'],['dark','Dark']].map(([v,l]) => (
+                    {[['very_fair', 'Very Fair'], ['fair', 'Fair'], ['wheatish', 'Wheatish'], ['dark', 'Dark']].map(([v, l]) => (
                       <option key={v} value={v}>{l}</option>
                     ))}
                   </select>
@@ -248,7 +243,7 @@ function RegisterContent() {
                 <div>
                   <label className="label">Marital Status</label>
                   <select className="select" value={form.marital_status} onChange={e => set('marital_status', e.target.value)}>
-                    {[['never_married','Never Married'],['divorced','Divorced'],['widowed','Widowed']].map(([v,l]) => (
+                    {[['never_married', 'Never Married'], ['divorced', 'Divorced'], ['widowed', 'Widowed']].map(([v, l]) => (
                       <option key={v} value={v}>{l}</option>
                     ))}
                   </select>
@@ -258,7 +253,7 @@ function RegisterContent() {
                 <label className="label">About Yourself</label>
                 <textarea className="input resize-none" rows={3}
                   placeholder="Write a few lines about yourself — interests, lifestyle, values..."
-                  value={form.about_me} onChange={e => set('about_me', e.target.value)}/>
+                  value={form.about_me} onChange={e => set('about_me', e.target.value)} />
               </div>
             </div>
           )}
@@ -276,7 +271,7 @@ function RegisterContent() {
               <div>
                 <label className="label">Education Details</label>
                 <input type="text" className="input" placeholder="e.g. B.Tech in CSE from NIT Jabalpur"
-                  value={form.education_detail} onChange={e => set('education_detail', e.target.value)}/>
+                  value={form.education_detail} onChange={e => set('education_detail', e.target.value)} />
               </div>
               <div>
                 <label className="label">Occupation *</label>
@@ -288,7 +283,7 @@ function RegisterContent() {
               <div>
                 <label className="label">Work Details</label>
                 <input type="text" className="input" placeholder="e.g. Software Engineer at TCS, Pune"
-                  value={form.occupation_detail} onChange={e => set('occupation_detail', e.target.value)}/>
+                  value={form.occupation_detail} onChange={e => set('occupation_detail', e.target.value)} />
               </div>
               <div>
                 <label className="label">Annual Income</label>
@@ -307,7 +302,7 @@ function RegisterContent() {
                 <div>
                   <label className="label">Father's Name *</label>
                   <input type="text" className="input" placeholder="Father's full name"
-                    value={form.father_name} onChange={e => set('father_name', e.target.value)}/>
+                    value={form.father_name} onChange={e => set('father_name', e.target.value)} />
                 </div>
                 <div>
                   <label className="label">Father's Occupation</label>
@@ -320,7 +315,7 @@ function RegisterContent() {
               <div>
                 <label className="label">Mother's Name</label>
                 <input type="text" className="input" placeholder="Mother's full name"
-                  value={form.mother_name} onChange={e => set('mother_name', e.target.value)}/>
+                  value={form.mother_name} onChange={e => set('mother_name', e.target.value)} />
               </div>
               <div>
                 <label className="label">Gotra</label>
@@ -331,7 +326,7 @@ function RegisterContent() {
               </div>
               <div className="flex items-center gap-3 bg-saffron-50 border border-saffron-100 rounded-2xl p-4">
                 <input type="checkbox" id="manglik" className="w-5 h-5 accent-saffron-500"
-                  checked={form.manglik} onChange={e => set('manglik', e.target.checked)}/>
+                  checked={form.manglik} onChange={e => set('manglik', e.target.checked)} />
                 <label htmlFor="manglik" className="font-semibold text-stone-700 cursor-pointer">
                   Manglik (मांगलिक)
                 </label>
@@ -350,7 +345,7 @@ function RegisterContent() {
                   </span>
                   <input type="tel" className="input flex-1" maxLength={10}
                     placeholder="10-digit mobile number"
-                    value={form.phone} onChange={e => set('phone', e.target.value.replace(/\D/g,''))}/>
+                    value={form.phone} onChange={e => set('phone', e.target.value.replace(/\D/g, ''))} />
                 </div>
               </div>
               <div>
@@ -361,7 +356,7 @@ function RegisterContent() {
                   </span>
                   <input type="tel" className="input flex-1" maxLength={10}
                     placeholder="Same as mobile (optional)"
-                    value={form.whatsapp} onChange={e => set('whatsapp', e.target.value.replace(/\D/g,''))}/>
+                    value={form.whatsapp} onChange={e => set('whatsapp', e.target.value.replace(/\D/g, ''))} />
                 </div>
               </div>
               <div>
@@ -380,13 +375,13 @@ function RegisterContent() {
                     </select>
                   ) : (
                     <input type="text" className="input" placeholder="District name"
-                      value={form.district} onChange={e => set('district', e.target.value)}/>
+                      value={form.district} onChange={e => set('district', e.target.value)} />
                   )}
                 </div>
                 <div>
                   <label className="label">City / Village *</label>
                   <input type="text" className="input" placeholder="City or village"
-                    value={form.city} onChange={e => set('city', e.target.value)}/>
+                    value={form.city} onChange={e => set('city', e.target.value)} />
                 </div>
               </div>
             </div>
@@ -399,7 +394,7 @@ function RegisterContent() {
                 {photoUrl ? (
                   <div className="relative mb-5">
                     <img src={photoUrl} alt="Preview"
-                      className="w-44 h-44 rounded-3xl object-cover border-4 border-saffron-200 shadow-xl"/>
+                      className="w-44 h-44 rounded-3xl object-cover border-4 border-saffron-200 shadow-xl" />
                     <button type="button"
                       onClick={() => { setPhotoUrl(''); setPhoto(null) }}
                       className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full
@@ -415,9 +410,9 @@ function RegisterContent() {
                   </div>
                 )}
                 <label className="btn btn-outline btn-md cursor-pointer">
-                  <Upload className="w-4 h-4"/>
+                  <Upload className="w-4 h-4" />
                   {photoUrl ? 'Change Photo' : 'Upload Photo'}
-                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange}/>
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
                 </label>
                 <p className="text-xs text-stone-400 mt-3 text-center">
                   JPG, PNG. Max 5MB. A clear face photo gets more responses.
@@ -439,18 +434,18 @@ function RegisterContent() {
           {/* Navigation */}
           <div className="flex gap-3 mt-8">
             {step > 0 && (
-              <button type="button" onClick={() => setStep(s => s-1)}
+              <button type="button" onClick={() => setStep(s => s - 1)}
                 className="btn btn-outline btn-md">
-                <ChevronLeft className="w-4 h-4"/> Back
+                <ChevronLeft className="w-4 h-4" /> Back
               </button>
             )}
             <button type="button" onClick={next} disabled={loading}
               className="btn btn-primary btn-md flex-1 justify-center">
               {loading
-                ? <Loader2 className="w-5 h-5 animate-spin"/>
-                : step === STEPS.length-1
-                  ? <><Check className="w-4 h-4"/> Submit Profile</>
-                  : <>Next <ChevronRight className="w-4 h-4"/></>
+                ? <Loader2 className="w-5 h-5 animate-spin" />
+                : step === STEPS.length - 1
+                  ? <><Check className="w-4 h-4" /> Submit Profile</>
+                  : <>Next <ChevronRight className="w-4 h-4" /></>
               }
             </button>
           </div>
@@ -469,10 +464,10 @@ export default function RegisterPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin"/>
+        <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
       </div>
     }>
-      <RegisterContent/>
+      <RegisterContent />
     </Suspense>
   )
 }
