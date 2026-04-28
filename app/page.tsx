@@ -68,7 +68,7 @@ export default function HomePage() {
                 </svg>
               </span>
               <br/>
-              <span className="inline-block mt-5 text-white/95">खोजें — आज ही</span>
+              <span className="inline-block mt-4 text-white/95">खोजें — आज ही</span>
             </h1>
 
             <p className="text-white/80 text-xl sm:text-2xl font-light leading-relaxed mb-10 max-w-2xl mx-auto animate-fade-up-3">
