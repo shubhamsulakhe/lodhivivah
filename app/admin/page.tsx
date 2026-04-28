@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { CheckCircle, XCircle, Eye, Users, Crown, Clock, Shield, LogOut } from 'lucide-react'
+import { CheckCircle, XCircle, Eye, Users, Crown, Clock, Shield, LogOut, RefreshCw } from 'lucide-react'
 import { getAge } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import Logo from '@/components/Logo'
@@ -12,20 +12,29 @@ export default function AdminPage() {
   const router = useRouter()
   const [isAdmin, setIsAdmin]     = useState(false)
   const [loading, setLoading]     = useState(true)
-  const [tab, setTab]             = useState<'payments'|'pending'|'approved'|'all'>('payments')
+  const [tab, setTab]             = useState<'payments'|'pending'|'approved'|'all'>('pending')
   const [profiles, setProfiles]   = useState<any[]>([])
   const [payments, setPayments]   = useState<any[]>([])
   const [stats, setStats]         = useState({ total:0, pending:0, approved:0, premium:0 })
   const [search, setSearch]       = useState('')
   const [planModal, setPlanModal] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => { checkAdmin() }, [])
-  useEffect(() => { if (isAdmin) { fetchStats(); fetchPayments(); fetchProfiles() } }, [tab, isAdmin])
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchStats()
+      fetchPayments()
+      fetchProfiles()
+    }
+  }, [tab, isAdmin])
 
   async function checkAdmin() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
-    const { data } = await supabase.from('admin_users').select('id').eq('user_id', user.id).single()
+    const { data } = await supabase
+      .from('admin_users').select('id').eq('user_id', user.id).single()
     if (!data) { toast.error('Admin access नहीं है'); router.push('/'); return }
     setIsAdmin(true)
     setLoading(false)
@@ -44,100 +53,136 @@ export default function AdminPage() {
 
   async function fetchPayments() {
     const { data } = await supabase
-      .from('payments')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50)
+      .from('payments').select('*')
+      .order('created_at', { ascending: false }).limit(50)
     setPayments(data || [])
   }
 
   async function fetchProfiles() {
-    let q = supabase.from('profiles').select('*').order('created_at', { ascending: false })
+    setRefreshing(true)
+    let q = supabase.from('profiles').select('*')
+      .order('created_at', { ascending: false })
+
     if (tab === 'pending')  q = q.eq('status', 'pending')
     if (tab === 'approved') q = q.eq('status', 'approved')
-    const { data } = await q.limit(100)
+
+    const { data, error } = await q.limit(100)
+    setRefreshing(false)
+
+    if (error) {
+      toast.error('Error loading profiles: ' + error.message)
+      return
+    }
     setProfiles(data || [])
   }
 
-  async function updateStatus(id: string, status: 'approved' | 'rejected') {
-    const { error } = await supabase.from('profiles').update({ status }).eq('id', id)
-    if (error) { toast.error('Error हुआ'); return }
-    toast.success(status === 'approved' ? '✅ Profile Approved!' : '❌ Profile Rejected')
-    fetchProfiles()
-    fetchStats()
+async function updateStatus(id: string, status: 'approved' | 'rejected') {
+  const toastId = toast.loading('Updating...')
+  
+  const { error } = await supabase
+    .from('profiles')
+    .update({ status })
+    .eq('id', id)
+
+  if (error) {
+    toast.error('Error: ' + error.message, { id: toastId })
+    console.log('Update error:', error)
+    return
   }
+
+  toast.success(
+    status === 'approved' ? '✅ Profile Approved!' : '❌ Rejected',
+    { id: toastId }
+  )
+
+  // Update local state immediately — don't wait for refetch
+  setProfiles(prev =>
+    prev.map(p => p.id === id ? { ...p, status } : p)
+  )
+
+  // Also refresh stats
+  fetchStats()
+}
 
   async function togglePremium(id: string, current: boolean) {
     if (current) {
-      await supabase.from('profiles').update({
+      const toastId = toast.loading('Removing premium...')
+      const { error } = await supabase.from('profiles').update({
         is_premium: false, plan: 'free', premium_until: null
       }).eq('id', id)
-      toast.success('Premium removed')
-      fetchProfiles()
-      fetchStats()
+
+      if (error) {
+        toast.error('Error: ' + error.message, { id: toastId })
+        return
+      }
+      toast.success('Premium removed', { id: toastId })
+      await fetchStats()
+      await fetchProfiles()
     } else {
       setPlanModal(id)
     }
   }
 
-  async function activatePlan(profileId: string, plan: string) {
-    const months       = plan === 'gold' ? 12 : 6
-    const premiumUntil = new Date()
-    premiumUntil.setMonth(premiumUntil.getMonth() + months)
-
-    await supabase.from('profiles').update({
-      is_premium:    true,
-      plan,
-      premium_until: premiumUntil.toISOString(),
-    }).eq('id', profileId)
-
-    toast.success(`✅ ${plan.toUpperCase()} activated!`)
-    setPlanModal(null)
-    fetchProfiles()
-    fetchStats()
-  }
-
-async function confirmPayment(paymentId: string, profileId: string, plan: string) {
-  console.log('confirmPayment called with:', { paymentId, profileId, plan })
-
+async function activatePlan(profileId: string, plan: string) {
+  const toastId = toast.loading('Activating...')
   const months       = plan === 'gold' ? 12 : 6
   const premiumUntil = new Date()
   premiumUntil.setMonth(premiumUntil.getMonth() + months)
 
-  const { error: profileError } = await supabase.from('profiles').update({
+  const { error } = await supabase.from('profiles').update({
     is_premium:    true,
     plan,
     premium_until: premiumUntil.toISOString(),
   }).eq('id', profileId)
 
-  console.log('Profile update error:', profileError)
-
-  const { data: paymentData, error: paymentError } = await supabase
-    .from('payments')
-    .update({ status: 'confirmed' })
-    .eq('id', paymentId)
-    .select()
-
-  console.log('Payment ID:', paymentId)
-  console.log('Payment update data:', paymentData)
-  console.log('Payment update error:', paymentError)
-
-  if (profileError || paymentError) {
-    toast.error('Error हुआ — check console')
+  if (error) {
+    toast.error('Error: ' + error.message, { id: toastId })
     return
   }
 
-  toast.success(`✅ ${plan.toUpperCase()} activated!`)
-setTimeout(() => {
-  fetchPayments()
+  toast.success(`✅ ${plan.toUpperCase()} activated!`, { id: toastId })
+  setPlanModal(null)
+
+  // Update local state immediately
+  setProfiles(prev =>
+    prev.map(p => p.id === profileId
+      ? { ...p, is_premium: true, plan, premium_until: premiumUntil.toISOString() }
+      : p
+    )
+  )
+
   fetchStats()
-}, 800)
 }
+
+  async function confirmPayment(paymentId: string, profileId: string, plan: string) {
+    const toastId = toast.loading('Activating...')
+    const months       = plan === 'gold' ? 12 : 6
+    const premiumUntil = new Date()
+    premiumUntil.setMonth(premiumUntil.getMonth() + months)
+
+    const { error: profileError } = await supabase.from('profiles').update({
+      is_premium:    true,
+      plan,
+      premium_until: premiumUntil.toISOString(),
+    }).eq('id', profileId)
+
+    if (profileError) {
+      toast.error('Profile update error: ' + profileError.message, { id: toastId })
+      return
+    }
+
+    await supabase.from('payments')
+      .update({ status: 'confirmed' }).eq('id', paymentId)
+
+    toast.success(`✅ ${plan.toUpperCase()} activated!`, { id: toastId })
+    await fetchPayments()
+    await fetchStats()
+  }
 
   async function rejectPayment(paymentId: string) {
     await supabase.from('payments').update({ status: 'rejected' }).eq('id', paymentId)
     toast.success('Payment rejected')
-    fetchPayments()
+    await fetchPayments()
   }
 
   const filtered = profiles.filter(p =>
@@ -147,10 +192,10 @@ setTimeout(() => {
   )
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-cream">
+    <div className="min-h-screen flex items-center justify-center bg-stone-950">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin mx-auto mb-4"/>
-        <p className="text-stone-500">Checking admin access...</p>
+        <div className="w-12 h-12 border-4 border-saffron-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
+        <p className="text-stone-400">Checking admin access...</p>
       </div>
     </div>
   )
@@ -158,7 +203,7 @@ setTimeout(() => {
   return (
     <div className="min-h-screen bg-stone-950">
 
-      {/* Admin Navbar */}
+      {/* Navbar */}
       <nav className="bg-stone-900 border-b border-stone-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Logo variant="light" size="sm"/>
@@ -167,11 +212,14 @@ setTimeout(() => {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <button onClick={() => { fetchStats(); fetchProfiles(); fetchPayments() }}
+            className="flex items-center gap-1.5 text-stone-400 hover:text-white text-sm transition-colors">
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}/> Refresh
+          </button>
           <Link href="/" className="text-stone-400 hover:text-white text-sm transition-colors">
             View Site
           </Link>
-          <button
-            onClick={() => { supabase.auth.signOut(); router.push('/') }}
+          <button onClick={() => { supabase.auth.signOut(); router.push('/') }}
             className="flex items-center gap-1.5 text-stone-400 hover:text-red-400 text-sm transition-colors">
             <LogOut className="w-4 h-4"/> Logout
           </button>
@@ -214,15 +262,11 @@ setTimeout(() => {
             ))}
           </div>
           {tab !== 'payments' && (
-            <input
-              type="text"
-              placeholder="Search by name, city or phone..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+            <input type="text" placeholder="Search by name, city or phone..."
+              value={search} onChange={e => setSearch(e.target.value)}
               className="flex-1 bg-stone-900 border border-stone-700 text-white
                          placeholder:text-stone-500 rounded-xl px-4 py-2.5 text-sm
-                         focus:outline-none focus:border-saffron-500"
-            />
+                         focus:outline-none focus:border-saffron-500"/>
           )}
         </div>
 
@@ -230,19 +274,15 @@ setTimeout(() => {
         {tab === 'payments' && (
           <div className="bg-stone-900 border border-stone-800 rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-stone-800 flex items-center justify-between">
-              <h2 className="text-white font-bold text-lg">
-                Payment Requests
-              </h2>
+              <h2 className="text-white font-bold text-lg">Payment Requests</h2>
               <span className="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-3 py-1 rounded-full">
                 {payments.filter(p => p.status === 'pending').length} pending
               </span>
             </div>
-
             {payments.length === 0 ? (
               <div className="text-center py-16 text-stone-500">
                 <Crown className="w-10 h-10 mx-auto mb-3 opacity-30"/>
                 <p>No payment requests yet</p>
-                <p className="text-xs mt-1">When users request premium, they will appear here</p>
               </div>
             ) : (
               <div className="divide-y divide-stone-800">
@@ -270,17 +310,14 @@ setTimeout(() => {
                         <span>📅 {new Date(pay.created_at).toLocaleDateString('en-IN')}</span>
                       </div>
                     </div>
-
                     {pay.status === 'pending' && (
                       <div className="flex gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => confirmPayment(pay.id, pay.profile_id, pay.plan)}
+                        <button onClick={() => confirmPayment(pay.id, pay.profile_id, pay.plan)}
                           className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm
                                      font-bold px-4 py-2.5 rounded-xl transition-colors">
                           ✓ Activate {pay.plan === 'gold' ? 'Gold 👑' : 'Silver ⚡'}
                         </button>
-                        <button
-                          onClick={() => rejectPayment(pay.id)}
+                        <button onClick={() => rejectPayment(pay.id)}
                           className="bg-stone-800 hover:bg-red-900/50 text-stone-400
                                      hover:text-red-400 text-sm font-bold px-4 py-2.5
                                      rounded-xl transition-colors border border-stone-700">
@@ -288,7 +325,6 @@ setTimeout(() => {
                         </button>
                       </div>
                     )}
-
                     {pay.status === 'confirmed' && (
                       <span className="text-emerald-400 text-sm font-bold">✓ Activated</span>
                     )}
@@ -305,6 +341,13 @@ setTimeout(() => {
         {/* PROFILES TABLE */}
         {tab !== 'payments' && (
           <div className="bg-stone-900 border border-stone-800 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-stone-800 flex items-center justify-between">
+              <span className="text-stone-400 text-sm">{filtered.length} profiles</span>
+              <button onClick={fetchProfiles}
+                className="text-stone-400 hover:text-white text-xs flex items-center gap-1 transition-colors">
+                <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`}/> Refresh
+              </button>
+            </div>
             <div className="hidden sm:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-stone-800">
               {['Name & Details','Gender','Location','Status','Plan','Actions'].map(h => (
                 <span key={h} className="text-stone-500 text-xs font-semibold uppercase tracking-wider">{h}</span>
@@ -322,7 +365,6 @@ setTimeout(() => {
                   <div key={p.id}
                     className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-4
                                hover:bg-stone-800/50 transition-colors">
-
                     {/* Name */}
                     <div className="flex items-center gap-3">
                       {p.photo_url ? (
@@ -360,7 +402,7 @@ setTimeout(() => {
                     <div className="flex items-center">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-semibold
                         ${p.status === 'approved' ? 'bg-emerald-900 text-emerald-400'
-                          : p.status === 'pending' ? 'bg-yellow-900 text-yellow-400'
+                          : p.status === 'pending'  ? 'bg-yellow-900 text-yellow-400'
                           : 'bg-red-900 text-red-400'}`}>
                         {p.status}
                       </span>
@@ -369,12 +411,10 @@ setTimeout(() => {
                     {/* Plan */}
                     <div className="flex items-center">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-semibold
-                        ${p.plan === 'gold' ? 'bg-yellow-900/30 text-yellow-400'
+                        ${p.plan === 'gold'   ? 'bg-yellow-900/30 text-yellow-400'
                           : p.plan === 'silver' ? 'bg-blue-900/30 text-blue-400'
                           : 'bg-stone-800 text-stone-400'}`}>
-                        {p.plan === 'gold' ? '👑 Gold'
-                          : p.plan === 'silver' ? '⚡ Silver'
-                          : 'Free'}
+                        {p.plan === 'gold' ? '👑 Gold' : p.plan === 'silver' ? '⚡ Silver' : 'Free'}
                       </span>
                     </div>
 
@@ -393,6 +433,14 @@ setTimeout(() => {
                             <XCircle className="w-3 h-3"/> Reject
                           </button>
                         </>
+                      )}
+                      {p.status === 'approved' && (
+                        <button onClick={() => updateStatus(p.id, 'rejected')}
+                          className="flex items-center gap-1 bg-stone-700 hover:bg-red-900/50
+                                     text-stone-300 hover:text-red-400 text-xs font-semibold
+                                     px-3 py-1.5 rounded-lg transition-colors">
+                          Suspend
+                        </button>
                       )}
                       <button onClick={() => togglePremium(p.id, p.is_premium)}
                         className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5
@@ -426,52 +474,41 @@ setTimeout(() => {
             <p className="text-stone-400 text-sm mb-6">
               Choose which plan to assign to this member
             </p>
-
             <div className="space-y-3 mb-6">
-              <button
-                onClick={() => activatePlan(planModal, 'silver')}
+              <button onClick={() => activatePlan(planModal, 'silver')}
                 className="w-full flex items-center justify-between bg-stone-800
                            hover:bg-blue-900/40 border border-stone-700 hover:border-blue-500
                            text-white px-5 py-4 rounded-xl transition-all group">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">⚡</span>
                   <div className="text-left">
-                    <p className="font-bold group-hover:text-blue-300 transition-colors">
-                      Silver Plan
-                    </p>
+                    <p className="font-bold group-hover:text-blue-300 transition-colors">Silver Plan</p>
                     <p className="text-stone-400 text-xs">6 months access</p>
                   </div>
                 </div>
                 <span className="text-blue-400 font-black text-xl">₹499</span>
               </button>
-
-              <button
-                onClick={() => activatePlan(planModal, 'gold')}
+              <button onClick={() => activatePlan(planModal, 'gold')}
                 className="w-full flex items-center justify-between bg-stone-800
                            hover:bg-yellow-900/40 border border-stone-700 hover:border-yellow-500
                            text-white px-5 py-4 rounded-xl transition-all group">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">👑</span>
                   <div className="text-left">
-                    <p className="font-bold group-hover:text-yellow-300 transition-colors">
-                      Gold Plan
-                    </p>
+                    <p className="font-bold group-hover:text-yellow-300 transition-colors">Gold Plan</p>
                     <p className="text-stone-400 text-xs">12 months access</p>
                   </div>
                 </div>
                 <span className="text-yellow-400 font-black text-xl">₹999</span>
               </button>
             </div>
-
-            <button
-              onClick={() => setPlanModal(null)}
+            <button onClick={() => setPlanModal(null)}
               className="w-full text-stone-500 hover:text-stone-300 text-sm transition-colors py-2">
               Cancel
             </button>
           </div>
         </div>
       )}
-
     </div>
   )
 }
