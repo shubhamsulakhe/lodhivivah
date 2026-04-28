@@ -14,15 +14,15 @@ import { getAge } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 function DashboardContent() {
-  const router  = useRouter()
-  const params  = useSearchParams()
+  const router = useRouter()
+  const params = useSearchParams()
   const [profile, setProfile]     = useState<any>(null)
   const [loading, setLoading]     = useState(true)
   const [interests, setInterests] = useState<any[]>([])
   const [sent, setSent]           = useState<any[]>([])
 
   useEffect(() => {
-    if (params.get('new')) toast.success('Profile submit हो गई! Review में है 🎉')
+    if (params.get('new')) toast.success('Profile submitted! Under review 🎉')
     loadData()
   }, [])
 
@@ -45,8 +45,8 @@ function DashboardContent() {
 
   async function respondToInterest(interestId: string, status: 'accepted' | 'rejected') {
     const { error } = await supabase.from('interests').update({ status }).eq('id', interestId)
-    if (error) { toast.error('Error हुआ'); return }
-    toast.success(status === 'accepted' ? 'Interest Accept! 💝' : 'Rejected')
+    if (error) { toast.error('Error occurred'); return }
+    toast.success(status === 'accepted' ? 'Interest Accepted! 💝' : 'Interest Rejected')
     loadData()
   }
 
@@ -58,7 +58,8 @@ function DashboardContent() {
   }
 
   if (loading) return (
-    <><Navbar /><div className="min-h-screen flex items-center justify-center pt-20">
+    <><Navbar />
+    <div className="min-h-screen flex items-center justify-center pt-20">
       <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
     </div></>
   )
@@ -70,49 +71,60 @@ function DashboardContent() {
     <>
       <Navbar />
       <main className="pt-20 min-h-screen bg-cream">
+
+        {/* Header */}
         <div className="bg-gradient-to-r from-saffron-800 via-saffron-700 to-saffron-500 py-10">
           <div className="container flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               {profile.photo_url ? (
-                <img src={profile.photo_url} alt="" className="w-16 h-16 rounded-2xl object-cover border-2 border-white/30" />
+                <img src={profile.photo_url} alt=""
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-white/30 flex-shrink-0" />
               ) : (
-                <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-black text-white">
+                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center
+                                text-2xl font-black text-white flex-shrink-0">
                   {profile.name?.charAt(0)}
                 </div>
               )}
-              <div>
-                <p className="text-white/70 text-sm">नमस्ते 🙏</p>
-                <h1 className="text-white font-black text-2xl">{profile.name}</h1>
+              <div className="min-w-0">
+                <p className="text-white/70 text-xs">Welcome back</p>
+                <h1 className="text-white font-black text-xl truncate">{profile.name}</h1>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {profile.is_premium ? (
-                    <span className="flex items-center gap-1 bg-yellow-400/20 text-yellow-300 text-xs font-bold px-3 py-1 rounded-full">
-                      <Crown className="w-3 h-3 fill-yellow-300" />{profile.plan?.toUpperCase()} Member
+                    <span className="flex items-center gap-1 bg-yellow-400/20 text-yellow-300
+                                     text-xs font-bold px-2.5 py-0.5 rounded-full">
+                      <Crown className="w-3 h-3 fill-yellow-300" />{profile.plan?.toUpperCase()}
                     </span>
                   ) : (
-                    <span className="bg-white/20 text-white/80 text-xs px-3 py-1 rounded-full">Free Member</span>
+                    <span className="bg-white/20 text-white/80 text-xs px-2.5 py-0.5 rounded-full">
+                      Free
+                    </span>
                   )}
-                  <span className={`text-xs px-3 py-1 rounded-full font-semibold
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold
                     ${profile.status === 'approved' ? 'bg-emerald-500/20 text-emerald-200'
                       : profile.status === 'pending' ? 'bg-yellow-500/20 text-yellow-200'
                       : 'bg-red-500/20 text-red-200'}`}>
-                    {profile.status === 'approved' ? '✓ Verified' : profile.status === 'pending' ? '⏳ Review में' : '✗ Rejected'}
+                    {profile.status === 'approved' ? '✓ Verified'
+                      : profile.status === 'pending' ? '⏳ Pending'
+                      : '✗ Rejected'}
                   </span>
                 </div>
               </div>
             </div>
-            <Link href="/profile/edit" className="btn btn-white btn-sm">
+            <Link href="/profile/edit" className="btn btn-white btn-sm self-start sm:self-auto">
               <Edit className="w-4 h-4" /> Edit Profile
             </Link>
           </div>
         </div>
 
-        <div className="container py-8 space-y-6">
+        <div className="container py-6 space-y-5">
+
+          {/* Status alerts */}
           {profile.status === 'pending' && (
             <div className="card p-4 border-l-4 border-yellow-400 flex items-start gap-3">
               <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-stone-800">Profile Review में है</p>
-                <p className="text-stone-500 text-sm">आपकी profile 24 घंटे में review होगी।</p>
+                <p className="font-bold text-stone-800 text-sm">Profile Under Review</p>
+                <p className="text-stone-500 text-xs mt-0.5">Your profile will be reviewed within 24 hours.</p>
               </div>
             </div>
           )}
@@ -120,155 +132,203 @@ function DashboardContent() {
             <div className="card p-4 border-l-4 border-red-400 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-stone-800">Profile Rejected हुई</p>
-                <p className="text-stone-500 text-sm mb-2">Profile edit करके दोबारा submit करें।</p>
+                <p className="font-bold text-stone-800 text-sm">Profile Rejected</p>
+                <p className="text-stone-500 text-xs mb-2">Please edit and resubmit your profile.</p>
                 <Link href="/profile/edit" className="btn btn-outline btn-sm">Edit Profile</Link>
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { icon: Heart,       label: 'Interests Received', value: interests.length,                                      color: 'bg-pink-50 text-pink-600' },
-              { icon: CheckCircle, label: 'Accepted',           value: interests.filter(i => i.status === 'accepted').length,  color: 'bg-emerald-50 text-emerald-600' },
-              { icon: Users,       label: 'Sent Interests',     value: sent.length,                                           color: 'bg-purple-50 text-purple-600' },
-              { icon: Eye,         label: 'Pending',            value: pendingReceived.length,                                color: 'bg-orange-50 text-orange-600' },
+              { icon: Heart,       label: 'Received',  value: interests.length,                                      color: 'bg-pink-50 text-pink-600' },
+              { icon: CheckCircle, label: 'Accepted',  value: interests.filter(i => i.status === 'accepted').length, color: 'bg-emerald-50 text-emerald-600' },
+              { icon: Users,       label: 'Sent',      value: sent.length,                                           color: 'bg-purple-50 text-purple-600' },
+              { icon: Eye,         label: 'Pending',   value: pendingReceived.length,                                color: 'bg-orange-50 text-orange-600' },
             ].map(({ icon: Icon, label, value, color }) => (
-              <div key={label} className="card p-5 text-center">
-                <div className={`w-10 h-10 rounded-2xl ${color} flex items-center justify-center mx-auto mb-3`}>
-                  <Icon className="w-5 h-5" />
+              <div key={label} className="card p-4 text-center">
+                <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mx-auto mb-2`}>
+                  <Icon className="w-4 h-4" />
                 </div>
-                <div className="text-2xl font-black text-stone-900">{value}</div>
-                <div className="text-stone-400 text-xs mt-1">{label}</div>
+                <div className="text-xl font-black text-stone-900">{value}</div>
+                <div className="text-stone-400 text-xs mt-0.5">{label}</div>
               </div>
             ))}
           </div>
 
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-stone-900">Profile Completeness</h2>
-              <span className="text-saffron-600 font-black text-lg">{completeness}%</span>
+          {/* Profile completeness */}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-bold text-stone-900 text-sm">Profile Completeness</h2>
+              <span className="text-saffron-600 font-black">{completeness}%</span>
             </div>
-            <div className="h-3 bg-stone-100 rounded-full overflow-hidden mb-3">
+            <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden mb-2">
               <div className="h-full bg-gradient-to-r from-saffron-600 to-saffron-400 rounded-full transition-all duration-1000"
-                style={{ width: `${completeness}%` }} />
+                   style={{ width: `${completeness}%` }} />
             </div>
             {completeness < 100 && (
               <div className="flex items-center justify-between">
-                <p className="text-stone-400 text-sm">Profile पूरी करें — ज्यादा responses मिलेंगे</p>
-                <Link href="/profile/edit" className="text-saffron-600 text-sm font-bold hover:underline flex items-center gap-1">
-                  Complete करें <ArrowRight className="w-3 h-3" />
+                <p className="text-stone-400 text-xs">Complete profile for more responses</p>
+                <Link href="/profile/edit"
+                  className="text-saffron-600 text-xs font-bold hover:underline flex items-center gap-1">
+                  Complete <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
             )}
           </div>
 
+          {/* Premium upgrade */}
           {!profile.is_premium && (
-            <div className="card p-6 bg-gradient-to-r from-saffron-50 to-yellow-50 border-2 border-saffron-200">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Crown className="w-5 h-5 text-yellow-500 fill-yellow-400" />
-                    <h2 className="font-black text-stone-900">Premium में Upgrade करें</h2>
+            <div className="card p-5 bg-gradient-to-r from-saffron-50 to-yellow-50 border-2 border-saffron-200">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <Crown className="w-5 h-5 text-yellow-500 fill-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h2 className="font-black text-stone-900 text-sm">Upgrade to Premium</h2>
+                    <p className="text-stone-600 text-xs mt-0.5">View contacts, send unlimited interests</p>
                   </div>
-                  <p className="text-stone-600 text-sm">Contact details देखें, unlimited interests भेजें</p>
                 </div>
-                <Link href="/premium" className="btn btn-primary btn-md whitespace-nowrap">
-                  <Crown className="w-4 h-4" /> Upgrade — ₹499
+                <Link href="/premium" className="btn btn-primary btn-sm whitespace-nowrap self-start sm:self-auto">
+                  <Crown className="w-3.5 h-3.5" /> Upgrade — ₹499
                 </Link>
               </div>
             </div>
           )}
 
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="font-bold text-stone-900 text-lg flex items-center gap-2">
-                <Heart className="w-5 h-5 text-pink-500" /> Received Interests ({interests.length})
+          {/* Received Interests */}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-stone-900 flex items-center gap-2">
+                <Heart className="w-4 h-4 text-pink-500" />
+                Received ({interests.length})
               </h2>
               {pendingReceived.length > 0 && (
-                <span className="badge bg-red-100 text-red-700 text-xs">{pendingReceived.length} pending</span>
+                <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-bold">
+                  {pendingReceived.length} pending
+                </span>
               )}
             </div>
+
             {interests.length === 0 ? (
               <div className="text-center py-8 text-stone-400">
-                <Heart className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="font-medium">अभी कोई interest नहीं आई</p>
-                <p className="text-sm mt-1">Profile approve होने के बाद interests आने लगेंगी</p>
+                <Heart className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm font-medium">No interests yet</p>
+                <p className="text-xs mt-1">Interests will appear after profile is approved</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {interests.map((interest) => (
-                  <div key={interest.id} className="flex items-center gap-4 p-4 bg-stone-50 rounded-2xl">
+                  <div key={interest.id}
+                    className="flex items-center gap-3 p-3 bg-stone-50 rounded-2xl">
+
+                    {/* Avatar */}
                     {interest.sender?.photo_url ? (
-                      <img src={interest.sender.photo_url} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                      <img src={interest.sender.photo_url} alt=""
+                        className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
                     ) : (
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0
-                        ${interest.sender?.gender === 'female' ? 'bg-pink-100 text-pink-400' : 'bg-blue-100 text-blue-400'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center
+                                      text-base font-bold flex-shrink-0
+                        ${interest.sender?.gender === 'female'
+                          ? 'bg-pink-100 text-pink-400'
+                          : 'bg-blue-100 text-blue-400'}`}>
                         {interest.sender?.name?.charAt(0)}
                       </div>
                     )}
+
+                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-stone-900">{interest.sender?.name}</p>
-                      <p className="text-stone-500 text-xs truncate">
-                        {interest.sender?.date_of_birth ? getAge(interest.sender.date_of_birth) : '?'} yrs • {interest.sender?.education} • {interest.sender?.city}
+                      <p className="font-bold text-stone-900 text-sm truncate">
+                        {interest.sender?.name}
+                      </p>
+                      <p className="text-stone-400 text-xs truncate">
+                        {interest.sender?.date_of_birth
+                          ? getAge(interest.sender.date_of_birth) : '?'} yrs
+                        {interest.sender?.city ? ` • ${interest.sender.city}` : ''}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {interest.status === 'pending' ? (
-                        <>
-                          <button onClick={() => respondToInterest(interest.id, 'accepted')}
-                            className="text-xs bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-bold hover:bg-emerald-600 transition-colors">
-                            Accept
-                          </button>
-                          <button onClick={() => respondToInterest(interest.id, 'rejected')}
-                            className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-bold hover:bg-red-200 transition-colors">
-                            Reject
-                          </button>
-                        </>
-                      ) : (
-                        <span className={`text-xs px-3 py-1.5 rounded-xl font-bold
-                          ${interest.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
-                          {interest.status === 'accepted' ? '✓ Accepted' : '✗ Rejected'}
-                        </span>
-                      )}
-                    </div>
+
+                    {/* Actions */}
+                    {interest.status === 'pending' ? (
+                      <div className="flex flex-col gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => respondToInterest(interest.id, 'accepted')}
+                          className="text-xs bg-emerald-500 text-white px-3 py-1.5
+                                     rounded-xl font-bold whitespace-nowrap">
+                          ✓ Accept
+                        </button>
+                        <button
+                          onClick={() => respondToInterest(interest.id, 'rejected')}
+                          className="text-xs bg-red-100 text-red-600 px-3 py-1.5
+                                     rounded-xl font-bold whitespace-nowrap">
+                          ✗ Reject
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={`text-xs px-2.5 py-1.5 rounded-xl font-bold flex-shrink-0 whitespace-nowrap
+                        ${interest.status === 'accepted'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-red-100 text-red-600'}`}>
+                        {interest.status === 'accepted' ? '✓ Accepted' : '✗ Rejected'}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
             )}
           </div>
 
+          {/* Sent Interests */}
           {sent.length > 0 && (
-            <div className="card p-6">
-              <h2 className="font-bold text-stone-900 text-lg mb-5 flex items-center gap-2">
-                <ArrowRight className="w-5 h-5 text-saffron-500" /> Sent Interests ({sent.length})
+            <div className="card p-5">
+              <h2 className="font-bold text-stone-900 mb-4 flex items-center gap-2">
+                <ArrowRight className="w-4 h-4 text-saffron-500" />
+                Sent ({sent.length})
               </h2>
               <div className="space-y-3">
                 {sent.map((interest) => (
-                  <div key={interest.id} className="flex items-center gap-4 p-4 bg-stone-50 rounded-2xl">
+                  <div key={interest.id}
+                    className="flex items-center gap-3 p-3 bg-stone-50 rounded-2xl">
+
+                    {/* Avatar */}
                     {interest.receiver?.photo_url ? (
-                      <img src={interest.receiver.photo_url} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                      <img src={interest.receiver.photo_url} alt=""
+                        className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
                     ) : (
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0
-                        ${interest.receiver?.gender === 'female' ? 'bg-pink-100 text-pink-400' : 'bg-blue-100 text-blue-400'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center
+                                      text-base font-bold flex-shrink-0
+                        ${interest.receiver?.gender === 'female'
+                          ? 'bg-pink-100 text-pink-400'
+                          : 'bg-blue-100 text-blue-400'}`}>
                         {interest.receiver?.name?.charAt(0)}
                       </div>
                     )}
+
+                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-stone-900">{interest.receiver?.name}</p>
-                      <p className="text-stone-500 text-xs truncate">
-                        {interest.receiver?.date_of_birth ? getAge(interest.receiver.date_of_birth) : '?'} yrs • {interest.receiver?.city}
+                      <p className="font-bold text-stone-900 text-sm truncate">
+                        {interest.receiver?.name}
+                      </p>
+                      <p className="text-stone-400 text-xs truncate">
+                        {interest.receiver?.date_of_birth
+                          ? getAge(interest.receiver.date_of_birth) : '?'} yrs
+                        {interest.receiver?.city ? ` • ${interest.receiver.city}` : ''}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-xs px-3 py-1.5 rounded-xl font-bold
+
+                    {/* Status + View */}
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                      <span className={`text-xs px-2.5 py-1 rounded-xl font-bold whitespace-nowrap
                         ${interest.status === 'accepted' ? 'bg-emerald-100 text-emerald-700'
                           : interest.status === 'rejected' ? 'bg-red-100 text-red-600'
                           : 'bg-yellow-100 text-yellow-700'}`}>
-                        {interest.status === 'accepted' ? '✓ Accepted' : interest.status === 'rejected' ? '✗ Rejected' : '⏳ Pending'}
+                        {interest.status === 'accepted' ? '✓ Accepted'
+                          : interest.status === 'rejected' ? '✗ Rejected'
+                          : '⏳ Pending'}
                       </span>
                       <Link href={`/profiles/${interest.receiver_id}`}
-                        className="text-xs bg-saffron-50 text-saffron-700 px-3 py-1.5 rounded-xl font-bold hover:bg-saffron-100">
+                        className="text-xs bg-saffron-50 text-saffron-700 px-2.5 py-1
+                                   rounded-xl font-bold whitespace-nowrap">
                         View
                       </Link>
                     </div>
@@ -277,6 +337,7 @@ function DashboardContent() {
               </div>
             </div>
           )}
+
         </div>
       </main>
       <Footer />

@@ -77,27 +77,31 @@ export default function PremiumPage() {
 
   // When user clicks "Get Plan" button silver/gold
   async function handlePlanClick(plan: any) {
-  if (plan.id === 'free') return
-  if (!user) { window.location.href = '/register'; return }
-  setSelected(plan)
+    if (plan.id === 'free') return
+    if (!user) {
+      toast.error('Please login first to upgrade')
+      window.location.href = '/login'
+      return
+    }
+    setSelected(plan)
 
-  // Save payment request to database
-  if (profile) {
-    const { error } = await supabase.from('payments').insert({
-      profile_id:   profile.id,
-      profile_name: profile.name,
-      phone:        profile.phone,
-      plan:         plan.id,
-      amount:       plan.price,
-      status:       'pending',
-    })
-    console.log('Payment insert error:', error)
-  } else {
-    console.log('Profile is null — cannot save payment')
+    // Save payment request to database
+    if (profile) {
+      const { error } = await supabase.from('payments').insert({
+        profile_id: profile.id,
+        profile_name: profile.name,
+        phone: profile.phone,
+        plan: plan.id,
+        amount: plan.price,
+        status: 'pending',
+      })
+      console.log('Payment insert error:', error)
+    } else {
+      console.log('Profile is null — cannot save payment')
+    }
+
+    setShowModal(true)
   }
-
-  setShowModal(true)
-}
 
   function copyUPI() {
     navigator.clipboard.writeText(UPI_ID)
@@ -182,9 +186,9 @@ export default function PremiumPage() {
 
                 {/* CTA */}
                 {plan.id === 'free' ? (
-                  <Link href={user ? '/profiles' : '/register'}
+                  <Link href={user ? '/profiles' : '/login'}
                     className="btn btn-outline btn-md w-full justify-center">
-                    {user ? 'Browse Profiles' : 'Register Free'}
+                    {user ? 'Browse Profiles' : 'Login / Register'}
                   </Link>
                 ) : profile?.plan === plan.id ? (
                   <div className="w-full py-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-200
@@ -233,91 +237,69 @@ export default function PremiumPage() {
         </div>
       </main>
 
-      {/* Payment Modal */}
       {showModal && selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+          <div className="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
 
-            {/* Modal header */}
-            <div className="bg-gradient-to-r from-saffron-700 to-saffron-500 p-6 flex items-center justify-between">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-saffron-700 to-saffron-500 p-5 flex items-center justify-between sticky top-0">
               <div>
-                <p className="text-white/80 text-sm">Upgrading to</p>
-                <h3 className="text-white font-black text-2xl">{selectedPlan.icon} {selectedPlan.name}</h3>
-                <p className="text-yellow-200 font-bold text-lg">₹{selectedPlan.price} / {selectedPlan.period}</p>
+                <p className="text-white/75 text-xs">Upgrading to</p>
+                <h3 className="text-white font-black text-xl">{selectedPlan.icon} {selectedPlan.name} — ₹{selectedPlan.price}</h3>
               </div>
               <button onClick={() => setShowModal(false)}
-                className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30">
-                <X className="w-5 h-5 text-white" />
+                className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <X className="w-4 h-4 text-white" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <p className="text-stone-700 font-semibold text-center text-sm">
-                Payment के बाद WhatsApp करें — 24 hrs में activate होगा
-              </p>
-
-              {/* Step 1 - UPI */}
-
+            <div className="p-5 space-y-4">
+              {/* Step 1 */}
               <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200">
                 <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
-                  Step 1 — UPI से Pay करें
+                  Step 1 — Pay via UPI
                 </p>
-
-                {/* Mobile — opens GPay/PhonePe/Paytm directly */}
                 <a href={getUPILink(selectedPlan.price, selectedPlan.name)}
-                  className="flex items-center justify-center gap-2 w-full
-               bg-saffron-500 hover:bg-saffron-600 text-white
-               font-bold py-3.5 rounded-xl transition-colors mb-3">
+                  className="flex items-center justify-center gap-2 w-full bg-saffron-500 text-white font-bold py-3 rounded-xl mb-3 text-sm">
                   📱 Pay ₹{selectedPlan.price} via UPI App
                 </a>
-
-                {/* Desktop fallback — show UPI ID to copy */}
-                <div className="border-t border-stone-200 pt-3">
-                  <p className="text-xs text-stone-400 text-center mb-2">
-                    Mobile पर UPI app नहीं खुला? नीचे UPI ID copy करें
-                  </p>
-                  <div className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3">
-                    <div>
-                      <p className="text-xs text-stone-400">UPI ID</p>
-                      <p className="font-black text-stone-900">{UPI_ID}</p>
-                    </div>
-                    <button onClick={copyUPI}
-                      className="flex items-center gap-1.5 bg-saffron-50 hover:bg-saffron-100
-                   text-saffron-700 text-xs font-bold px-3 py-2 rounded-xl transition-colors">
-                      <Copy className="w-3.5 h-3.5" /> Copy
-                    </button>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1 h-px bg-stone-200" />
+                  <span className="text-xs font-bold text-stone-400">OR</span>
+                  <div className="flex-1 h-px bg-stone-200" />
+                </div>
+                <div className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-3 py-2.5">
+                  <div>
+                    <p className="text-[10px] text-stone-400">UPI ID</p>
+                    <p className="font-bold text-stone-900 text-sm">{UPI_ID}</p>
                   </div>
-                  <div className="flex items-center justify-between mt-2 bg-saffron-500 text-white rounded-xl px-4 py-3">
-                    <span className="font-medium text-sm">Amount</span>
-                    <span className="font-black text-lg">₹{selectedPlan.price}</span>
-                  </div>
+                  <button onClick={copyUPI}
+                    className="bg-saffron-50 text-saffron-700 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
+                    <Copy className="w-3 h-3" />Copy
+                  </button>
                 </div>
               </div>
 
-              {/* Step 2 - WhatsApp */}
+              {/* Step 2 */}
               <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200">
                 <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
-                  Step 2 — WhatsApp पर Screenshot भेजें
+                  Step 2 — Send Screenshot
                 </p>
                 <a href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(getWAMessage(selectedPlan))}`}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600
-                              text-white font-bold py-3.5 rounded-xl transition-colors">
-                  <MessageCircle className="w-5 h-5" />
-                  WhatsApp पर Payment Screenshot भेजें
+                  className="flex items-center justify-center gap-2 w-full bg-green-500 text-white font-bold py-3 rounded-xl text-sm">
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp Payment Screenshot
                 </a>
               </div>
 
-              {/* Note */}
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-center">
-                <p className="text-blue-700 text-xs font-medium">
-                  📌 Payment screenshot मिलने के बाद 24 घंटे में आपका account activate हो जाएगा
-                </p>
-              </div>
+              <p className="text-center text-xs text-stone-400">
+                📌 Activated within 24 hours of payment confirmation
+              </p>
 
               <button onClick={() => setShowModal(false)}
-                className="w-full text-stone-400 text-sm hover:text-stone-600 transition-colors py-2">
+                className="w-full text-stone-400 text-sm py-2">
                 Cancel
               </button>
             </div>
