@@ -65,7 +65,35 @@ function ProfilesContent() {
         .single()
       setDailyCount(limit?.count || 0)
 
-      fetchProfiles(mine)
+    // Check if admin
+const { data: adminCheck } = await supabase
+  .from('admin_users')
+  .select('id')
+  .eq('user_id', user.id)
+  .single()
+
+if (adminCheck) {
+  // Admin sees all profiles
+  fetchAllProfilesForAdmin()
+} else {
+  fetchProfiles(mine)
+}
+
+async function fetchAllProfilesForAdmin() {
+  setLoading(true)
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  setLoading(false)
+  if (error) { toast.error('Error loading'); return }
+  setProfiles(data || [])
+  setIsPremium(true) // Admin gets premium view
+}
+      
     }
   }
 

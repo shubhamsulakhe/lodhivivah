@@ -11,7 +11,7 @@ export default function ProfileCard({
   interestSent?: boolean
   blurred?: boolean
 }) {
-  const age      = getAge(profile.date_of_birth)
+  const age = getAge(profile.date_of_birth)
   const isFemale = profile.gender === 'female'
 
   return (
@@ -66,9 +66,13 @@ export default function ProfileCard({
                 <Crown className="w-3 h-3 fill-yellow-500" /> {profile.plan?.toUpperCase()}
               </span>
             )}
-            <span className="badge-verified flex items-center gap-1 shadow-sm">
-              <CheckCircle className="w-3 h-3" /> Verified
-            </span>
+            
+            {/* Show "Verified" badge only if profile is approved */}
+            {profile.status === 'approved' && (
+              <span className="badge-verified flex items-center gap-1 shadow-sm">
+                <CheckCircle className="w-3 h-3" /> Verified
+              </span>
+            )}
           </div>
         )}
 

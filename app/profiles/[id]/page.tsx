@@ -13,18 +13,18 @@ import toast from 'react-hot-toast'
 import Link from 'next/link'
 
 export default function ProfileDetailPage() {
-  const { id }   = useParams()
-  const router   = useRouter()
-  const [profile, setProfile]         = useState<any>(null)
-  const [loading, setLoading]         = useState(true)
-  const [myProfile, setMyProfile]     = useState<any>(null)
-  const [interestSent, setSent]       = useState(false)
-  const [interestStatus, setStatus]   = useState<string | null>(null)
-  const [interestId, setInterestId]   = useState<string | null>(null)
-  const [canSeeContact, setCanSee]    = useState(false)
-  const [freeViewUsed, setFreeView]   = useState(false)
+  const { id } = useParams()
+  const router = useRouter()
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [myProfile, setMyProfile] = useState<any>(null)
+  const [interestSent, setSent] = useState(false)
+  const [interestStatus, setStatus] = useState<string | null>(null)
+  const [interestId, setInterestId] = useState<string | null>(null)
+  const [canSeeContact, setCanSee] = useState(false)
+  const [freeViewUsed, setFreeView] = useState(false)
   const [showUnmatch, setShowUnmatch] = useState(false)
-  const [dailyCount, setDailyCount]   = useState(0)
+  const [dailyCount, setDailyCount] = useState(0)
 
   useEffect(() => { loadData() }, [id])
 
@@ -44,8 +44,15 @@ export default function ProfileDetailPage() {
     if (!mine) return
     setMyProfile(mine)
 
-    // Redirect if same gender
-    if (prof && mine.gender === prof.gender) {
+    // Check if admin
+    const { data: adminCheck } = await supabase
+      .from('admin_users')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    // Redirect if same gender — but NOT for admins
+    if (prof && mine.gender === prof.gender && !adminCheck) {
       toast.error('Same gender profile नहीं देख सकते')
       router.push('/profiles')
       return
@@ -90,9 +97,9 @@ export default function ProfileDetailPage() {
       setCanSee(true)
     } else {
       // Check if mutual match
-      const myAccepted      = int?.status === 'accepted'
-      const theyAccepted    = reverseInt?.status === 'accepted'
-      const isMutualMatch   = myAccepted || theyAccepted
+      const myAccepted = int?.status === 'accepted'
+      const theyAccepted = reverseInt?.status === 'accepted'
+      const isMutualMatch = myAccepted || theyAccepted
 
       if (isMutualMatch) {
         // Check if free view already used
@@ -173,23 +180,23 @@ export default function ProfileDetailPage() {
 
   if (loading) return (
     <><Navbar />
-    <div className="min-h-screen flex items-center justify-center pt-20">
-      <div className="w-12 h-12 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin mx-auto" />
-    </div></>
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="w-12 h-12 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin mx-auto" />
+      </div></>
   )
 
   if (!profile) return (
     <><Navbar />
-    <div className="min-h-screen flex items-center justify-center pt-20">
-      <div className="text-center">
-        <div className="text-6xl mb-4">😕</div>
-        <h2 className="text-xl font-bold text-stone-700 mb-4">Profile नहीं मिली</h2>
-        <Link href="/profiles" className="btn btn-primary btn-md">Back to Profiles</Link>
-      </div>
-    </div></>
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="text-center">
+          <div className="text-6xl mb-4">😕</div>
+          <h2 className="text-xl font-bold text-stone-700 mb-4">Profile नहीं मिली</h2>
+          <Link href="/profiles" className="btn btn-primary btn-md">Back to Profiles</Link>
+        </div>
+      </div></>
   )
 
-  const age      = getAge(profile.date_of_birth)
+  const age = getAge(profile.date_of_birth)
   const isFemale = profile.gender === 'female'
 
   return (
@@ -226,9 +233,20 @@ export default function ProfileDetailPage() {
                       {age} years • {cmToFeet(profile.height_cm || 160)}
                     </p>
                     <div className="flex gap-2 mt-2 flex-wrap">
-                      <span className="badge-verified flex items-center gap-1 text-xs">
-                        <CheckCircle className="w-3 h-3" /> Verified
-                      </span>
+                      {/* Show "Verified" badge only if profile is approved, and show */}
+                      {profile.status === 'approved' ? (
+                        <span className="badge-verified flex items-center gap-1 text-xs">
+                          <CheckCircle className="w-3 h-3" /> Verified
+                        </span>
+                      ) : profile.status === 'pending' ? (
+                        <span className="badge-pending flex items-center gap-1 text-xs">
+                          ⏳ Pending
+                        </span>
+                      ) : profile.status === 'rejected' ? (
+                        <span className="badge flex items-center gap-1 text-xs bg-red-100 text-red-600">
+                          ✗ Rejected
+                        </span>
+                      ) : null}
                       <span className={`badge text-xs ${isFemale ? 'badge-female' : 'badge-male'}`}>
                         {isFemale ? '♀ Bride' : '♂ Groom'}
                       </span>
@@ -244,12 +262,12 @@ export default function ProfileDetailPage() {
                 {/* Quick stats */}
                 <div className="p-5 grid grid-cols-2 gap-4">
                   {[
-                    { icon: Calendar,      label: 'Age',       value: `${age} years` },
-                    { icon: Ruler,         label: 'Height',    value: cmToFeet(profile.height_cm || 160) },
+                    { icon: Calendar, label: 'Age', value: `${age} years` },
+                    { icon: Ruler, label: 'Height', value: cmToFeet(profile.height_cm || 160) },
                     { icon: GraduationCap, label: 'Education', value: profile.education || 'N/A' },
-                    { icon: Briefcase,     label: 'Occupation',value: profile.occupation || 'N/A' },
-                    { icon: MapPin,        label: 'Location',  value: `${profile.city}, ${profile.state}` },
-                    { icon: User,          label: 'Gotra',     value: profile.gotra || 'N/A' },
+                    { icon: Briefcase, label: 'Occupation', value: profile.occupation || 'N/A' },
+                    { icon: MapPin, label: 'Location', value: `${profile.city}, ${profile.state}` },
+                    { icon: User, label: 'Gotra', value: profile.gotra || 'N/A' },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label}>
                       <p className="text-xs text-stone-400 font-medium mb-0.5 flex items-center gap-1">
@@ -273,10 +291,10 @@ export default function ProfileDetailPage() {
                     <div className={`w-full py-3 rounded-2xl text-sm font-bold text-center
                       ${interestStatus === 'accepted' ? 'bg-green-100 text-green-700'
                         : interestStatus === 'rejected' ? 'bg-red-100 text-red-600'
-                        : 'bg-pink-50 text-pink-600'}`}>
+                          : 'bg-pink-50 text-pink-600'}`}>
                       {interestStatus === 'accepted' ? '✅ Interest Accepted!'
                         : interestStatus === 'rejected' ? '❌ Interest Rejected'
-                        : '💝 Interest Sent — Pending'}
+                          : '💝 Interest Sent — Pending'}
                     </div>
                     {/* Withdraw button */}
                     {interestStatus !== 'rejected' && (
@@ -338,12 +356,12 @@ export default function ProfileDetailPage() {
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
                   {[
-                    { label: 'Date of Birth',   value: profile.date_of_birth },
-                    { label: 'Height',          value: cmToFeet(profile.height_cm || 160) },
-                    { label: 'Complexion',      value: profile.complexion },
-                    { label: 'Marital Status',  value: profile.marital_status?.replace('_', ' ') },
-                    { label: 'Manglik',         value: profile.manglik ? 'Yes' : 'No' },
-                    { label: 'Annual Income',   value: profile.annual_income || 'N/A' },
+                    { label: 'Date of Birth', value: profile.date_of_birth },
+                    { label: 'Height', value: cmToFeet(profile.height_cm || 160) },
+                    { label: 'Complexion', value: profile.complexion },
+                    { label: 'Marital Status', value: profile.marital_status?.replace('_', ' ') },
+                    { label: 'Manglik', value: profile.manglik ? 'Yes' : 'No' },
+                    { label: 'Annual Income', value: profile.annual_income || 'N/A' },
                   ].map(({ label, value }) => (
                     <div key={label}>
                       <p className="text-xs text-stone-400 mb-1">{label}</p>
@@ -359,10 +377,10 @@ export default function ProfileDetailPage() {
                 </h2>
                 <div className="grid grid-cols-2 gap-5">
                   {[
-                    { label: 'Education',     value: profile.education },
-                    { label: 'Details',       value: profile.education_detail },
-                    { label: 'Occupation',    value: profile.occupation },
-                    { label: 'Work Details',  value: profile.occupation_detail },
+                    { label: 'Education', value: profile.education },
+                    { label: 'Details', value: profile.education_detail },
+                    { label: 'Occupation', value: profile.occupation },
+                    { label: 'Work Details', value: profile.occupation_detail },
                   ].map(({ label, value }) => (
                     <div key={label}>
                       <p className="text-xs text-stone-400 mb-1">{label}</p>
@@ -378,10 +396,10 @@ export default function ProfileDetailPage() {
                 </h2>
                 <div className="grid grid-cols-2 gap-5">
                   {[
-                    { label: "Father's Name",       value: profile.father_name },
+                    { label: "Father's Name", value: profile.father_name },
                     { label: "Father's Occupation", value: profile.father_occupation },
-                    { label: "Mother's Name",       value: profile.mother_name },
-                    { label: 'Gotra',               value: profile.gotra },
+                    { label: "Mother's Name", value: profile.mother_name },
+                    { label: 'Gotra', value: profile.gotra },
                   ].map(({ label, value }) => (
                     <div key={label}>
                       <p className="text-xs text-stone-400 mb-1">{label}</p>
@@ -399,8 +417,8 @@ export default function ProfileDetailPage() {
                 {canSeeContact ? (
                   <div className="grid grid-cols-2 gap-5">
                     {[
-                      { label: 'Mobile',    value: `+91 ${profile.phone}` },
-                      { label: 'WhatsApp',  value: `+91 ${profile.whatsapp || profile.phone}` },
+                      { label: 'Mobile', value: `+91 ${profile.phone}` },
+                      { label: 'WhatsApp', value: `+91 ${profile.whatsapp || profile.phone}` },
                     ].map(({ label, value }) => (
                       <div key={label}>
                         <p className="text-xs text-stone-400 mb-1">{label}</p>
@@ -440,7 +458,7 @@ export default function ProfileDetailPage() {
       {/* Unmatch Confirmation Modal */}
       {showUnmatch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-             style={{ background: 'rgba(0,0,0,0.6)' }}>
+          style={{ background: 'rgba(0,0,0,0.6)' }}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="font-black text-stone-900 text-lg mb-2">Interest Withdraw करें?</h3>
             <p className="text-stone-500 text-sm mb-6">
