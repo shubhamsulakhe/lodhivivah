@@ -25,17 +25,52 @@ export const OCCUPATION = [
   'Government Employee','Private Employee','Business / Self Employed',
   'Doctor','Engineer','Teacher / Professor','Lawyer',
   'Army / Police / Defence','Farmer','Software Engineer / IT',
-  'Bank Employee','Nurse / Healthcare','Not Working','Student','Other',
+  'Bank Employee','Nurse / Healthcare','Retired','Not Working','Other',
 ]
 
 export const STATES = [
-  'Madhya Pradesh','Maharashtra','Chhattisgarh','Uttar Pradesh',
-  'Rajasthan','Gujarat','Karnataka','Delhi','Other',
+  'Madhya Pradesh',
+  'Chhattisgarh',
+  'Maharashtra',
+  'Uttar Pradesh',
+  'Rajasthan',
+  'Bihar',
+  'Jharkhand',
+  'Gujarat',
+  'Delhi',
+  'Other',
 ]
 
 export const MP_DISTRICTS = [
-  'Balaghat','Bhopal','Chhindwara','Jabalpur','Katni',
-  'Mandla','Narsinghpur','Seoni','Dindori','Other',
+  'Balaghat','Seoni','Mandla','Dindori','Jabalpur',
+  'Katni','Narsinghpur','Chhindwara','Sagar','Damoh',
+  'Bhopal','Indore','Rewa','Satna','Shahdol',
+  'Umaria','Anuppur','Sidhi','Singrauli','Panna',
+  'Other'
+]
+
+export const CG_DISTRICTS = [
+  'Raipur','Bilaspur','Durg','Rajnandgaon',
+  'Kabirdham','Bemetara','Mungeli','Balod',
+  'Baloda Bazar','Gariaband','Janjgir-Champa',
+  'Korba','Raigarh','Surguja','Other'
+]
+
+export const MH_DISTRICTS = [
+  'Nagpur','Wardha','Chandrapur','Gadchiroli',
+  'Bhandara','Gondia','Yavatmal','Amravati',
+  'Akola','Buldhana','Washim','Other'
+]
+
+export const UP_DISTRICTS = [
+  'Banda','Chitrakoot','Mahoba','Hamirpur',
+  'Jhansi','Lalitpur','Lucknow','Kanpur',
+  'Allahabad','Varanasi','Mirzapur','Sonbhadra','Other'
+]
+
+export const RJ_DISTRICTS = [
+  'Kota','Bundi','Baran','Jhalawar',
+  'Chittorgarh','Bhilwara','Udaipur','Other'
 ]
 
 export const GOTRA = [

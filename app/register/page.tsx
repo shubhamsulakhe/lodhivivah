@@ -6,7 +6,11 @@ import { supabase } from '@/lib/supabase/client'
 import { ChevronRight, ChevronLeft, Check, Loader2, Upload, ArrowLeft, ShieldCheck } from 'lucide-react'
 import Logo from '@/components/Logo'
 import toast from 'react-hot-toast'
-import { EDUCATION, OCCUPATION, STATES, MP_DISTRICTS, GOTRA, INCOME, HEIGHTS } from '@/lib/utils'
+import {
+  EDUCATION, OCCUPATION, STATES, MP_DISTRICTS,
+  CG_DISTRICTS, MH_DISTRICTS, UP_DISTRICTS,
+  RJ_DISTRICTS, GOTRA, INCOME, HEIGHTS
+} from '@/lib/utils'
 import { Suspense } from 'react'
 
 const STEPS = [
@@ -40,24 +44,24 @@ function RegisterContent() {
     checkAuth()
   }, [])
 
-async function checkAuth() {
-  const { data: { user } } = await supabase.auth.getUser()
+  async function checkAuth() {
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    // Not logged in — show form, verify at submit time
-    return
+    if (!user) {
+      // Not logged in — show form, verify at submit time
+      return
+    }
+
+    setUserId(user.id)
+
+    // If profile already exists go to dashboard
+    const { data: existing } = await supabase
+      .from('profiles').select('id').eq('user_id', user.id).single()
+    if (existing) {
+      router.push('/dashboard')
+      return
+    }
   }
-
-  setUserId(user.id)
-
-  // If profile already exists go to dashboard
-  const { data: existing } = await supabase
-    .from('profiles').select('id').eq('user_id', user.id).single()
-  if (existing) {
-    router.push('/dashboard')
-    return
-  }
-}
 
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }))
 
@@ -243,7 +247,11 @@ async function checkAuth() {
                 <div>
                   <label className="label">Marital Status</label>
                   <select className="select" value={form.marital_status} onChange={e => set('marital_status', e.target.value)}>
-                    {[['never_married', 'Never Married'], ['divorced', 'Divorced'], ['widowed', 'Widowed']].map(([v, l]) => (
+                    {[
+                      ['never_married', 'Never Married'],
+                      ['divorced', 'Divorced'],
+                      ['widowed', form.gender === 'male' ? 'Widower' : 'Widowed'],
+                    ].map(([v, l]) => (
                       <option key={v} value={v}>{l}</option>
                     ))}
                   </select>
@@ -368,15 +376,17 @@ async function checkAuth() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">District *</label>
-                  {form.state === 'Madhya Pradesh' ? (
-                    <select className="select" value={form.district} onChange={e => set('district', e.target.value)}>
-                      <option value="">Select district</option>
-                      {MP_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  ) : (
-                    <input type="text" className="input" placeholder="District name"
-                      value={form.district} onChange={e => set('district', e.target.value)} />
-                  )}
+                  <select className="select" value={form.district} onChange={e => set('district', e.target.value)}>
+                    <option value="">Select district</option>
+                    {form.state === 'Madhya Pradesh' && MP_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {form.state === 'Chhattisgarh' && CG_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {form.state === 'Maharashtra' && MH_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {form.state === 'Uttar Pradesh' && UP_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {form.state === 'Rajasthan' && RJ_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {!['Madhya Pradesh', 'Chhattisgarh', 'Maharashtra', 'Uttar Pradesh', 'Rajasthan'].includes(form.state) && (
+                      <option value="Other">Other</option>
+                    )}
+                  </select>
                 </div>
                 <div>
                   <label className="label">City / Village *</label>

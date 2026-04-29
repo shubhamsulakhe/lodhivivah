@@ -7,15 +7,19 @@ import Footer from '@/components/Footer'
 import { Save, Upload, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { EDUCATION, OCCUPATION, STATES, MP_DISTRICTS, GOTRA, INCOME, HEIGHTS } from '@/lib/utils'
+import {
+  EDUCATION, OCCUPATION, STATES, MP_DISTRICTS,
+  CG_DISTRICTS, MH_DISTRICTS, UP_DISTRICTS,
+  RJ_DISTRICTS, GOTRA, INCOME, HEIGHTS
+} from '@/lib/utils'
 
 export default function EditProfilePage() {
   const router = useRouter()
-  const [loading, setLoading]     = useState(true)
-  const [saving, setSaving]       = useState(false)
-  const [profile, setProfile]     = useState<any>(null)
-  const [userId, setUserId]       = useState<string>('')
-  const [photoFile, setPhoto]     = useState<File | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [profile, setProfile] = useState<any>(null)
+  const [userId, setUserId] = useState<string>('')
+  const [photoFile, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPreview] = useState('')
 
   useEffect(() => { loadProfile() }, [])
@@ -95,9 +99,9 @@ export default function EditProfilePage() {
 
   if (loading) return (
     <><Navbar />
-    <div className="min-h-screen flex items-center justify-center pt-20">
-      <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
-    </div></>
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
+      </div></>
   )
 
   return (
@@ -159,7 +163,7 @@ export default function EditProfilePage() {
                   <div>
                     <label className="label">Complexion</label>
                     <select className="select" value={profile.complexion || 'fair'} onChange={e => set('complexion', e.target.value)}>
-                      {[['very_fair','Very Fair'],['fair','Fair'],['wheatish','Wheatish'],['dark','Dark']].map(([v,l]) => (
+                      {[['very_fair', 'Very Fair'], ['fair', 'Fair'], ['wheatish', 'Wheatish'], ['dark', 'Dark']].map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
                       ))}
                     </select>
@@ -167,7 +171,11 @@ export default function EditProfilePage() {
                   <div>
                     <label className="label">Marital Status</label>
                     <select className="select" value={profile.marital_status || 'never_married'} onChange={e => set('marital_status', e.target.value)}>
-                      {[['never_married','Never Married'],['divorced','Divorced'],['widowed','Widowed']].map(([v,l]) => (
+                      {[
+                        ['never_married', 'Never Married'],
+                        ['divorced', 'Divorced'],
+                        ['widowed', profile?.gender === 'male' ? 'Widower' : 'Widowed'],
+                      ].map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
                       ))}
                     </select>
@@ -273,14 +281,17 @@ export default function EditProfilePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="label">District</label>
-                    {profile.state === 'Madhya Pradesh' ? (
-                      <select className="select" value={profile.district || ''} onChange={e => set('district', e.target.value)}>
-                        <option value="">Select</option>
-                        {MP_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
-                      </select>
-                    ) : (
-                      <input className="input" value={profile.district || ''} onChange={e => set('district', e.target.value)} />
-                    )}
+                    <select className="select" value={profile.district || ''}
+                      onChange={e => set('district', e.target.value)}>
+                      <option value="">Select district</option>
+                      {profile.state === 'Madhya Pradesh' && MP_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                      {profile.state === 'Chhattisgarh' && CG_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                      {profile.state === 'Maharashtra' && MH_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                      {profile.state === 'Uttar Pradesh' && UP_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                      {profile.state === 'Rajasthan' && RJ_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                      {!['Madhya Pradesh', 'Chhattisgarh', 'Maharashtra', 'Uttar Pradesh', 'Rajasthan']
+                        .includes(profile.state) && <option value="Other">Other</option>}
+                    </select>
                   </div>
                   <div>
                     <label className="label">City / Village</label>
