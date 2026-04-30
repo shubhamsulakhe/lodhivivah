@@ -9,17 +9,17 @@ import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 const NAV = [
-  { href: '/',         label: 'Home' },
+  { href: '/', label: 'Home' },
   { href: '/profiles', label: 'Find Match' },
-  { href: '/premium',  label: '✦ Premium' },
+  { href: '/premium', label: '✦ Premium' },
 ]
 
 export default function Navbar() {
-  const router   = useRouter()
+  const router = useRouter()
   const pathname = usePathname()
-  const [user, setUser]         = useState<any>(null)
-  const [profile, setProfile]   = useState<any>(null)
-  const [open, setOpen]         = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [open, setOpen] = useState(false)
   const [dropdown, setDropdown] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -71,7 +71,7 @@ export default function Navbar() {
                 pathname === href
                   ? transparent ? 'bg-white/20 text-white' : 'bg-saffron-50 text-saffron-600'
                   : transparent ? 'text-white/85 hover:text-white hover:bg-white/15'
-                                : 'text-stone-600 hover:text-saffron-600 hover:bg-saffron-50'
+                    : 'text-stone-600 hover:text-saffron-600 hover:bg-saffron-50'
               )}>
               {label}
             </Link>
@@ -90,37 +90,37 @@ export default function Navbar() {
                 )}
               >
                 {profile?.photo_url
-                  ? <img src={profile.photo_url} alt="" className="w-8 h-8 rounded-xl object-cover"/>
+                  ? <img src={profile.photo_url} alt="" className="w-8 h-8 rounded-xl object-cover" />
                   : <div className="w-8 h-8 bg-saffron-100 rounded-xl flex items-center justify-center">
-                      <User className="w-4 h-4 text-saffron-600"/>
-                    </div>
+                    <User className="w-4 h-4 text-saffron-600" />
+                  </div>
                 }
                 <span className={cn('text-sm font-semibold', transparent ? 'text-white' : 'text-stone-700')}>
                   {profile?.name?.split(' ')[0] || 'Profile'}
                 </span>
-                {profile?.is_premium && <Crown className="w-3.5 h-3.5 text-gold-500 fill-gold-400"/>}
+                {profile?.is_premium && <Crown className="w-3.5 h-3.5 text-gold-500 fill-gold-400" />}
                 <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', dropdown && 'rotate-180',
-                  transparent ? 'text-white/70' : 'text-stone-400')}/>
+                  transparent ? 'text-white/70' : 'text-stone-400')} />
               </button>
               {dropdown && (
                 <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50"
-                     onClick={() => setDropdown(false)}>
+                  onClick={() => setDropdown(false)}>
                   {[
-                    { href: '/dashboard',         icon: LayoutDashboard, label: 'Dashboard' },
-                    { href: '/profile/edit', icon: Settings,        label: 'Edit Profile' },
-                    { href: '/premium',           icon: Crown,           label: 'Upgrade Plan', gold: true },
+                    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+                    { href: '/profile/edit', icon: Settings, label: 'Edit Profile' },
+                    { href: '/premium', icon: Crown, label: 'Upgrade Plan', gold: true },
                   ].map(({ href, icon: Icon, label, gold }) => (
                     <Link key={href} href={href}
                       className={cn('flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-stone-50 transition-colors',
                         gold ? 'text-gold-600' : 'text-stone-700')}>
-                      <Icon className="w-4 h-4"/>
+                      <Icon className="w-4 h-4" />
                       {label}
                     </Link>
                   ))}
-                  <hr className="my-1.5 border-stone-100"/>
+                  <hr className="my-1.5 border-stone-100" />
                   <button onClick={logout}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                    <LogOut className="w-4 h-4"/> Logout
+                    <LogOut className="w-4 h-4" /> Logout
                   </button>
                 </div>
               )}
@@ -140,10 +140,28 @@ export default function Navbar() {
         </div>
 
         {/* Mobile toggle */}
-        <button onClick={() => setOpen(o => !o)}
-          className={cn('md:hidden p-2 rounded-xl', transparent ? 'text-white' : 'text-stone-700')}>
-          {open ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5"/>}
-        </button>
+
+        <div className="md:hidden flex items-center gap-2">
+          {user && profile && (
+            <div className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border',
+              transparent ? 'border-white/30 text-white' : 'border-stone-200 text-stone-700'
+            )}>
+              <User className="w-3.5 h-3.5" />
+              <span className="text-sm font-semibold">
+                {profile?.name?.split(' ')[0] || 'Profile'}
+              </span>
+              {profile?.is_premium && (
+                <Crown className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
+              )}
+            </div>
+          )}
+          <button onClick={() => setOpen(o => !o)}
+            className={cn('p-2 rounded-xl transition-colors',
+              transparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:bg-stone-50')}>
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -162,11 +180,11 @@ export default function Navbar() {
                 <>
                   <Link href="/profile/edit" onClick={() => setOpen(false)}
                     className="flex items-center gap-2 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <LayoutDashboard className="w-4 h-4"/> Dashboard
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
                   <button onClick={() => { logout(); setOpen(false) }}
                     className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl">
-                    <LogOut className="w-4 h-4"/> Logout
+                    <LogOut className="w-4 h-4" /> Logout
                   </button>
                 </>
               ) : (
