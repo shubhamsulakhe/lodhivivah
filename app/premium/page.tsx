@@ -26,7 +26,9 @@ const PLANS = [
     ],
   },
   {
-    id: 'silver', name: 'Silver', price: 499, period: '6 महीने',
+
+
+    id: 'silver', name: 'Silver', price: 199, period: '1 महीना',
     icon: '⚡', popular: true, primary: true,
     features: [
       { text: 'Profile create करें', ok: true },
@@ -40,7 +42,7 @@ const PLANS = [
     ],
   },
   {
-    id: 'gold', name: 'Gold', price: 999, period: '12 महीने',
+    id: 'gold', name: 'Gold', price: 399, period: '3 महीने',
     icon: '👑', popular: false, primary: false,
     features: [
       { text: 'Profile create करें', ok: true },

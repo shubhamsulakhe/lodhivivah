@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast'
 export const metadata: Metadata = {
   title: { default: 'LodhiVivah – लोधी समाज विवाह', template: '%s | LodhiVivah' },
   description: 'लोधी समाज का प्रमुख विवाह पोर्टल। Balaghat MP – Managed by Shubham Sulakhe.',
-  keywords: ['Lodhi Samaj Vivah','LodhiVivah','Lodhi matrimony','लोधी विवाह','Balaghat'],
+  keywords: ['Lodhi Samaj Vivah', 'LodhiVivah', 'Lodhi matrimony', 'लोधी विवाह', 'Balaghat'],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
+
         {children}
         <Toaster
           position="top-right"
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               border: '1px solid #fde8d8',
             },
             success: { iconTheme: { primary: '#f97316', secondary: '#fff' } },
-            error:   { iconTheme: { primary: '#e11d48', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#e11d48', secondary: '#fff' } },
           }}
         />
       </body>
