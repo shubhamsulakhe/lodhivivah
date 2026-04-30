@@ -295,13 +295,13 @@ export default function HomePage() {
                 cta: 'Start Free', href: '/premium', primary: false,
               },
               {
-                name: 'Silver', price: '₹499', period: '6 महीने', popular: true,
+                name: 'Silver', price: '₹199', period: '1 महीना', popular: true,
                 icon: '⚡', color: 'border-saffron-400',
                 features: ['सब Free में +', 'Contact numbers देखें', 'Unlimited interests', 'Advanced filters', 'WhatsApp connect', 'Priority listing'],
                 cta: 'Get Silver', href: '/premium', primary: true,
               },
               {
-                name: 'Gold', price: '₹999', period: '12 महीने', popular: false,
+                name: 'Gold', price: '₹399', period: '3 महीने', popular: false,
                 icon: '👑', color: 'border-gold-400',
                 features: ['सब Silver में +', 'Featured profile badge', 'Top search placement', 'Digital booklet PDF', '1 year membership', 'Dedicated support'],
                 cta: 'Get Gold', href: '/premium', primary: false,
