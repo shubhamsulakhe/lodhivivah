@@ -16,10 +16,10 @@ import toast from 'react-hot-toast'
 function DashboardContent() {
   const router = useRouter()
   const params = useSearchParams()
-  const [profile, setProfile]     = useState<any>(null)
-  const [loading, setLoading]     = useState(true)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const [interests, setInterests] = useState<any[]>([])
-  const [sent, setSent]           = useState<any[]>([])
+  const [sent, setSent] = useState<any[]>([])
 
   useEffect(() => {
     if (params.get('new')) toast.success('Profile submitted! Under review 🎉')
@@ -52,19 +52,19 @@ function DashboardContent() {
 
   function getCompleteness(): number {
     if (!profile) return 0
-    const fields = ['name','date_of_birth','education','occupation','city','father_name','gotra','photo_url','about_me']
+    const fields = ['name', 'date_of_birth', 'education', 'occupation', 'city', 'father_name', 'gotra', 'photo_url', 'about_me']
     const filled = fields.filter(f => profile[f] && profile[f] !== '').length
     return Math.round((filled / fields.length) * 100)
   }
 
   if (loading) return (
     <><Navbar />
-    <div className="min-h-screen flex items-center justify-center pt-20">
-      <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
-    </div></>
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
+      </div></>
   )
 
-  const completeness    = getCompleteness()
+  const completeness = getCompleteness()
   const pendingReceived = interests.filter(i => i.status === 'pending')
 
   return (
@@ -102,10 +102,10 @@ function DashboardContent() {
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold
                     ${profile.status === 'approved' ? 'bg-emerald-500/20 text-emerald-200'
                       : profile.status === 'pending' ? 'bg-yellow-500/20 text-yellow-200'
-                      : 'bg-red-500/20 text-red-200'}`}>
+                        : 'bg-red-500/20 text-red-200'}`}>
                     {profile.status === 'approved' ? '✓ Verified'
                       : profile.status === 'pending' ? '⏳ Pending'
-                      : '✗ Rejected'}
+                        : '✗ Rejected'}
                   </span>
                 </div>
               </div>
@@ -142,10 +142,10 @@ function DashboardContent() {
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { icon: Heart,       label: 'Received',  value: interests.length,                                      color: 'bg-pink-50 text-pink-600' },
-              { icon: CheckCircle, label: 'Accepted',  value: interests.filter(i => i.status === 'accepted').length, color: 'bg-emerald-50 text-emerald-600' },
-              { icon: Users,       label: 'Sent',      value: sent.length,                                           color: 'bg-purple-50 text-purple-600' },
-              { icon: Eye,         label: 'Pending',   value: pendingReceived.length,                                color: 'bg-orange-50 text-orange-600' },
+              { icon: Heart, label: 'Received', value: interests.length, color: 'bg-pink-50 text-pink-600' },
+              { icon: CheckCircle, label: 'Accepted', value: interests.filter(i => i.status === 'accepted').length, color: 'bg-emerald-50 text-emerald-600' },
+              { icon: Users, label: 'Sent', value: sent.length, color: 'bg-purple-50 text-purple-600' },
+              { icon: Eye, label: 'Pending', value: pendingReceived.length, color: 'bg-orange-50 text-orange-600' },
             ].map(({ icon: Icon, label, value, color }) => (
               <div key={label} className="card p-4 text-center">
                 <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mx-auto mb-2`}>
@@ -165,7 +165,7 @@ function DashboardContent() {
             </div>
             <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden mb-2">
               <div className="h-full bg-gradient-to-r from-saffron-600 to-saffron-400 rounded-full transition-all duration-1000"
-                   style={{ width: `${completeness}%` }} />
+                style={{ width: `${completeness}%` }} />
             </div>
             {completeness < 100 && (
               <div className="flex items-center justify-between">
@@ -237,8 +237,8 @@ function DashboardContent() {
                     )}
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-stone-900 text-sm truncate">
+                    <Link href={`/profiles/${interest.sender_id}`} className="flex-1 min-w-0 group">
+                      <p className="font-bold text-stone-900 text-sm truncate group-hover:text-saffron-600 transition-colors">
                         {interest.sender?.name}
                       </p>
                       <p className="text-stone-400 text-xs truncate">
@@ -246,32 +246,35 @@ function DashboardContent() {
                           ? getAge(interest.sender.date_of_birth) : '?'} yrs
                         {interest.sender?.city ? ` • ${interest.sender.city}` : ''}
                       </p>
-                    </div>
+                    </Link>
 
                     {/* Actions */}
-                    {interest.status === 'pending' ? (
-                      <div className="flex flex-col gap-1.5 flex-shrink-0">
-                        <button
-                          onClick={() => respondToInterest(interest.id, 'accepted')}
-                          className="text-xs bg-emerald-500 text-white px-3 py-1.5
+                    {
+                      interest.status === 'pending' ? (
+                        <div className="flex flex-col gap-1.5 flex-shrink-0">
+                          <button
+                            onClick={() => respondToInterest(interest.id, 'accepted')}
+                            className="text-xs bg-emerald-500 text-white px-3 py-1.5
                                      rounded-xl font-bold whitespace-nowrap">
-                          ✓ Accept
-                        </button>
-                        <button
-                          onClick={() => respondToInterest(interest.id, 'rejected')}
-                          className="text-xs bg-red-100 text-red-600 px-3 py-1.5
+                            ✓ Accept
+                          </button>
+                          <button
+                            onClick={() => respondToInterest(interest.id, 'rejected')}
+                            className="text-xs bg-red-100 text-red-600 px-3 py-1.5
                                      rounded-xl font-bold whitespace-nowrap">
-                          ✗ Reject
-                        </button>
-                      </div>
-                    ) : (
-                      <span className={`text-xs px-2.5 py-1.5 rounded-xl font-bold flex-shrink-0 whitespace-nowrap
+                            ✗ Reject
+                          </button>
+
+                        </div>
+                      ) : (
+                        <span className={`text-xs px-2.5 py-1.5 rounded-xl font-bold flex-shrink-0 whitespace-nowrap
                         ${interest.status === 'accepted'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-red-100 text-red-600'}`}>
-                        {interest.status === 'accepted' ? '✓ Accepted' : '✗ Rejected'}
-                      </span>
-                    )}
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-red-100 text-red-600'}`}>
+                          {interest.status === 'accepted' ? '✓ Accepted' : '✗ Rejected'}
+                        </span>
+                      )
+                    }
                   </div>
                 ))}
               </div>
@@ -321,10 +324,10 @@ function DashboardContent() {
                       <span className={`text-xs px-2.5 py-1 rounded-xl font-bold whitespace-nowrap
                         ${interest.status === 'accepted' ? 'bg-emerald-100 text-emerald-700'
                           : interest.status === 'rejected' ? 'bg-red-100 text-red-600'
-                          : 'bg-yellow-100 text-yellow-700'}`}>
+                            : 'bg-yellow-100 text-yellow-700'}`}>
                         {interest.status === 'accepted' ? '✓ Accepted'
                           : interest.status === 'rejected' ? '✗ Rejected'
-                          : '⏳ Pending'}
+                            : '⏳ Pending'}
                       </span>
                       <Link href={`/profiles/${interest.receiver_id}`}
                         className="text-xs bg-saffron-50 text-saffron-700 px-2.5 py-1
@@ -339,7 +342,7 @@ function DashboardContent() {
           )}
 
         </div>
-      </main>
+      </main >
       <Footer />
     </>
   )
