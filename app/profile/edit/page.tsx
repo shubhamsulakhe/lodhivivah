@@ -64,6 +64,7 @@ export default function EditProfilePage() {
 
       const { error } = await supabase.from('profiles').update({
         name: profile.name,
+        gender: profile.gender,
         date_of_birth: profile.date_of_birth,
         height_cm: Number(profile.height_cm),
         complexion: profile.complexion,
@@ -180,6 +181,52 @@ export default function EditProfilePage() {
                       ))}
                     </select>
                   </div>
+                </div>
+                {/* ADD GENDER SECTION HERE ↓ */}
+                <div>
+                  <label className="label">Your Identity / आपकी पहचान</label>
+                  <p className="text-xs text-stone-400 mb-3">
+                    Who are you? <span className="text-stone-300">— आप कौन हैं?</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      ['female', '♀ Bride', 'वधु', 'from-pink-400 to-rose-500'],
+                      ['male', '♂ Groom', 'वर', 'from-blue-400 to-blue-600'],
+                    ].map(([v, lbl, hindi, grad]) => (
+                      <button key={v} type="button" onClick={() => set('gender', v)}
+                        className={`py-4 rounded-2xl border-2 font-bold text-sm transition-all duration-200
+          ${profile.gender === v
+                            ? `bg-gradient-to-br ${grad} text-white border-transparent shadow-md`
+                            : 'border-stone-200 text-stone-600 hover:border-stone-300 hover:bg-stone-50'}`}>
+                        <span className="block">{lbl}</span>
+                        <span className={`block text-xs font-medium mt-0.5
+          ${profile.gender === v ? 'text-white/80' : 'text-stone-400'}`}>
+                          {hindi}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {profile.gender && (
+                    <div className={`mt-3 p-3 rounded-xl flex items-center gap-2.5
+      ${profile.gender === 'female'
+                        ? 'bg-pink-50 border border-pink-200 text-pink-700'
+                        : 'bg-blue-50 border border-blue-200 text-blue-700'}`}>
+                      <span className="text-xl">{profile.gender === 'female' ? '♀' : '♂'}</span>
+                      <div>
+                        <p className="font-bold text-sm">
+                          {profile.gender === 'female' ? 'I am Bride' : 'I am Groom'}
+                          <span className="font-normal opacity-70 ml-1.5">
+                            {profile.gender === 'female' ? '— मैं वधु हूँ' : '— मैं वर हूँ'}
+                          </span>
+                        </p>
+                        <p className="text-xs opacity-70 mt-0.5">
+                          {profile.gender === 'female'
+                            ? 'Shown to Grooms — वरों को दिखेगी'
+                            : 'Shown to Brides — वधुओं को दिखेगी'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="label">About Yourself</label>
