@@ -274,8 +274,6 @@ export default function LoginPage() {
             Back to Home
           </Link>
 
-          <div className="lg:hidden mb-8 flex justify-center"><Logo size="md" /></div>
-
           {/* Progress steps */}
           {step !== 'reset-password' && (
             <div className="flex items-center gap-2 mb-8">
