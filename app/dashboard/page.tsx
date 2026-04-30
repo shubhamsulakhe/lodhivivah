@@ -190,7 +190,7 @@ function DashboardContent() {
                   </div>
                 </div>
                 <Link href="/premium" className="btn btn-primary btn-sm whitespace-nowrap self-start sm:self-auto">
-                  <Crown className="w-3.5 h-3.5" /> Upgrade — ₹499
+                  <Crown className="w-3.5 h-3.5" /> Upgrade — ₹199
                 </Link>
               </div>
             </div>

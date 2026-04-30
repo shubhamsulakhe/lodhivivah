@@ -33,7 +33,11 @@ function RegisterContent() {
   const router = useRouter()
   const params = useSearchParams()
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState(INIT)
+  const [form, setForm] = useState({
+    ...INIT,
+    phone: params.get('mobile') || '',
+    whatsapp: params.get('mobile') || '',
+  })
   const [loading, setLoading] = useState(false)
   const [photoFile, setPhoto] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState('')
@@ -380,25 +384,40 @@ function RegisterContent() {
           {step === 3 && (
             <div className="space-y-5">
               <div>
-                <label className="label">Mobile Number *</label>
+                <label className="label">Mobile Number / मोबाइल नंबर *</label>
                 <div className="flex gap-2">
-                  <span className="input w-16 flex-shrink-0 flex items-center justify-center bg-stone-50 font-bold text-stone-600">
-                    +91
-                  </span>
+                  <span className="input w-16 flex-shrink-0 flex items-center justify-center
+                     bg-stone-50 font-bold text-stone-600 text-sm">+91</span>
                   <input type="tel" className="input flex-1" maxLength={10}
                     placeholder="10-digit mobile number"
-                    value={form.phone} onChange={e => set('phone', e.target.value.replace(/\D/g, ''))} />
+                    value={form.phone}
+                    onChange={e => set('phone', e.target.value.replace(/\D/g, ''))} />
                 </div>
+                {form.phone.length > 0 && (
+                  <p className={`text-xs mt-1 font-medium
+      ${/^[6-9]\d{9}$/.test(form.phone) ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {/^[6-9]\d{9}$/.test(form.phone) ? '✓ Valid number' : '✗ Enter valid 10-digit number'}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="label">WhatsApp Number</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="label mb-0">WhatsApp Number / व्हाट्सएप नंबर</label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox"
+                      className="w-4 h-4 accent-saffron-500 cursor-pointer"
+                      checked={form.whatsapp === form.phone}
+                      onChange={e => set('whatsapp', e.target.checked ? form.phone : '')} />
+                    <span className="text-xs text-stone-500 font-medium">Same as mobile / मोबाइल जैसा</span>
+                  </label>
+                </div>
                 <div className="flex gap-2">
-                  <span className="input w-16 flex-shrink-0 flex items-center justify-center bg-stone-50 font-bold text-stone-600">
-                    +91
-                  </span>
+                  <span className="input w-16 flex-shrink-0 flex items-center justify-center
+                     bg-stone-50 font-bold text-stone-600 text-sm">+91</span>
                   <input type="tel" className="input flex-1" maxLength={10}
-                    placeholder="Same as mobile (optional)"
-                    value={form.whatsapp} onChange={e => set('whatsapp', e.target.value.replace(/\D/g, ''))} />
+                    placeholder="WhatsApp number (optional)"
+                    value={form.whatsapp}
+                    onChange={e => set('whatsapp', e.target.value.replace(/\D/g, ''))} />
                 </div>
               </div>
               <div>
