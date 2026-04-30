@@ -178,9 +178,13 @@ export default function Navbar() {
             <div className="pt-3 border-t border-stone-100">
               {user ? (
                 <>
-                  <Link href="/profile/edit" onClick={() => setOpen(false)}
+                  <Link href="/dashboard" onClick={() => setOpen(false)}
                     className="flex items-center gap-2 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Link>
+                  <Link href="/profile/edit" onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                    <Settings className="w-4 h-4" /> Edit Profile
                   </Link>
                   <button onClick={() => { logout(); setOpen(false) }}
                     className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl">
