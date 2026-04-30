@@ -3,9 +3,28 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 
 export const metadata: Metadata = {
-  title: { default: 'LodhiVivah – लोधी समाज विवाह', template: '%s | LodhiVivah' },
-  description: 'लोधी समाज का प्रमुख विवाह पोर्टल। Balaghat MP – Managed by Shubham Sulakhe.',
-  keywords: ['Lodhi Samaj Vivah', 'LodhiVivah', 'Lodhi matrimony', 'लोधी विवाह', 'Balaghat'],
+  title: { default: 'Wedly — लोधी समाज विवाह', template: '%s | Wedly' },
+  description: 'Lodhi Samaj का विश्वसनीय विवाह पोर्टल।',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/manifest.json',
+  openGraph: {
+    title:       'Wedly — लोधी समाज विवाह',
+    description: 'Find your perfect match on Wedly',
+    url:         'https://www.wedly.co.in',
+    siteName:    'Wedly',
+    images: [{
+      url:    'https://www.wedly.co.in/android-chrome-512x512.png',
+      width:  512,
+      height: 512,
+    }],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
