@@ -43,12 +43,37 @@ function DashboardContent() {
     setSent(sentData || [])
   }
 
-  async function respondToInterest(interestId: string, status: 'accepted' | 'rejected') {
-    const { error } = await supabase.from('interests').update({ status }).eq('id', interestId)
-    if (error) { toast.error('Error occurred'); return }
-    toast.success(status === 'accepted' ? 'Interest Accepted! 💝' : 'Interest Rejected')
-    loadData()
+async function respondToInterest(interestId: string, status: 'accepted' | 'rejected', senderId?: string) {
+  const { error } = await supabase.from('interests').update({ status }).eq('id', interestId)
+  if (error) { toast.error('Error occurred'); return }
+  toast.success(status === 'accepted' ? 'Interest Accepted! 💝' : 'Interest Rejected')
+
+  if (status === 'accepted' && senderId && profile) {
+    const { data: existing } = await supabase
+      .from('chats')
+      .select('id')
+      .or(`and(user1_id.eq.${profile.id},user2_id.eq.${senderId}),and(user1_id.eq.${senderId},user2_id.eq.${profile.id})`)
+      .maybeSingle()
+
+    if (!existing) {
+      const { error: chatError } = await supabase.from('chats').insert({
+        user1_id:        profile.id,
+        user2_id:        senderId,
+        last_message_at: new Date().toISOString(),
+      })
+      if (chatError) {
+        console.error('Chat create error:', chatError)
+        toast.error('Chat creation failed: ' + chatError.message)
+      } else {
+        toast.success('💬 Chat unlocked! Go to Messages to say hello!', { duration: 5000 })
+      }
+    }
   }
+
+  loadData()
+}
+
+
 
   function getCompleteness(): number {
     if (!profile) return 0
@@ -253,13 +278,13 @@ function DashboardContent() {
                       interest.status === 'pending' ? (
                         <div className="flex flex-col gap-1.5 flex-shrink-0">
                           <button
-                            onClick={() => respondToInterest(interest.id, 'accepted')}
+                            onClick={() => respondToInterest(interest.id, 'accepted', interest.sender_id)}
                             className="text-xs bg-emerald-500 text-white px-3 py-1.5
                                      rounded-xl font-bold whitespace-nowrap">
                             ✓ Accept
                           </button>
                           <button
-                            onClick={() => respondToInterest(interest.id, 'rejected')}
+                            onClick={() => respondToInterest(interest.id, 'rejected', interest.sender_id)}
                             className="text-xs bg-red-100 text-red-600 px-3 py-1.5
                                      rounded-xl font-bold whitespace-nowrap">
                             ✗ Reject

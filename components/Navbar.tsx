@@ -7,11 +7,13 @@ import { Menu, X, Bell, User, LogOut, Crown, ChevronDown, Search, LayoutDashboar
 import Logo from './Logo'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import NotificationBell from './NotificationBell'
 
 const NAV = [
   { href: '/', label: 'Home' },
   { href: '/profiles', label: 'Find Match' },
   { href: '/premium', label: '✦ Premium' },
+  { href: '/chat', label: '💬 Chat' },
 ]
 
 export default function Navbar() {
@@ -81,6 +83,7 @@ export default function Navbar() {
         {/* Auth area */}
         <div className="hidden md:flex items-center gap-3">
           {user ? (
+            <> <NotificationBell />
             <div className="relative">
               <button
                 onClick={() => setDropdown(d => !d)}
@@ -125,6 +128,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            </>
           ) : (
             <>
               <Link href="/login"
