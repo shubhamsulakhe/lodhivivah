@@ -4,7 +4,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import {
-    ArrowLeft, Video, MoreVertical, Send, Paperclip,
+    ArrowLeft, Phone, MoreVertical, Send, Paperclip,
     Smile, CheckCheck, Check, Crown,
     UserX, HeartOff, X
 } from 'lucide-react'
@@ -58,6 +58,9 @@ export default function ChatPage() {
     const inputRef = useRef<HTMLInputElement>(null)
     const menuRef = useRef<HTMLDivElement>(null)
     const channelRef = useRef<any>(null)
+    const [callStatus, setCallStatus] = useState<'idle' | 'calling' | 'accepted' | 'rejected'>('idle')
+    const [activeCallId, setActiveCallId] = useState<string | null>(null)
+    const callChannelRef = useRef<any>(null)
 
     useEffect(() => {
         if (!chatId) return
@@ -154,6 +157,98 @@ export default function ChatPage() {
         toast.success(`${type === 'image' ? '📷 Photo' : '📄 Document'} sharing coming soon!`)
         setShowAttach(false)
     }
+    async function startCall() {
+        if (!myProfile || !otherProfile) return
+        if (callStatus === 'calling') {
+            toast.error('Call already in progress')
+            return
+        }
+
+        const roomName = `wedly-${chatId.slice(0, 8)}-${Date.now()}`
+        const roomUrl = `https://meet.jit.si/${roomName}`
+
+        setCallStatus('calling')
+        callStatusRef.current = 'calling'
+
+        // Insert call record
+        const { data: callData, error } = await supabase.from('calls').insert({
+            chat_id: chatId,
+            caller_id: myProfile.id,
+            receiver_id: otherProfile.id,
+            room_url: roomUrl,
+            status: 'ringing',
+        }).select().single()
+
+        if (error) {
+            toast.error('Failed to start call')
+            setCallStatus('idle')
+            callStatusRef.current = 'idle'
+            return
+        }
+
+        setActiveCallId(callData.id)
+
+        // Send message in chat
+        await supabase.from('messages').insert({
+            chat_id: chatId,
+            sender_id: myProfile.id,
+            content: `📞 Voice call started`,
+            read: false,
+        })
+
+        await supabase.from('chats').update({
+            last_message: '📞 Voice call started',
+            last_message_at: new Date().toISOString(),
+            last_sender_id: myProfile.id,
+        }).eq('id', chatId)
+
+        // Open Jitsi
+        window.open(roomUrl, '_blank')
+
+        toast.success(`📞 Calling ${otherProfile.name}…`, { duration: 4000 })
+
+        // Listen for accept/reject
+        if (callChannelRef.current) supabase.removeChannel(callChannelRef.current)
+
+        callChannelRef.current = supabase
+            .channel(`call-status-${callData.id}-${Date.now()}`)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'calls', filter: `id=eq.${callData.id}` },
+                (payload) => {
+                    const updated = payload.new as any
+                    if (updated.status === 'accepted') {
+                        toast.success(`${otherProfile.name} accepted the call! ✅`)
+                        setCallStatus('accepted')
+                        callStatusRef.current = 'accepted'
+                    } else if (updated.status === 'rejected') {
+                        toast.error(`${otherProfile.name} declined the call`)
+                        setCallStatus('idle')
+                        callStatusRef.current = 'idle'
+                    } else if (updated.status === 'missed') {
+                        toast.error('Call not answered')
+                        setCallStatus('idle')
+                        callStatusRef.current = 'idle'
+                    }
+                }
+            )
+            .subscribe()
+
+        // Auto end call after 30s if no answer
+        setTimeout(async () => {
+            if (callStatusRef.current === 'calling' && callData.id) {
+                await supabase.from('calls')
+                    .update({ status: 'missed' })
+                    .eq('id', callData.id)
+                    .eq('status', 'ringing')
+                setCallStatus('idle')
+                callStatusRef.current = 'idle'
+            }
+        }, 30000)
+    }
+
+    const callStatusRef = useRef<string>('idle')
+
     async function sendMessage() {
         const text = newMsg.trim()
         if (!text || sending || isBlocked || !myProfile) return
@@ -292,10 +387,15 @@ export default function ChatPage() {
 
                 <div className="flex items-center gap-1">
                     {isGold && (
-                        <button title="Video call — Gold only"
-                            className="w-9 h-9 rounded-full hover:bg-stone-100 flex items-center
-                         justify-center text-stone-600 transition-colors">
-                            <Video className="w-5 h-5" />
+                        <button
+                            onClick={startCall}
+                            title="Voice call — Gold only"
+                            className={`w-9 h-9 rounded-full flex items-center justify-center
+               transition-colors flex-shrink-0
+               ${callStatus === 'calling'
+                                    ? 'bg-green-100 text-green-600 animate-pulse'
+                                    : 'hover:bg-stone-100 text-stone-600'}`}>
+                            <Phone className="w-5 h-5" />
                         </button>
                     )}
                     <div className="relative" ref={menuRef}>
