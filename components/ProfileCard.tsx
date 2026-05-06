@@ -66,13 +66,21 @@ export default function ProfileCard({
                 <Crown className="w-3 h-3 fill-yellow-500" /> {profile.plan?.toUpperCase()}
               </span>
             )}
-            
+
             {/* Show "Verified" badge only if profile is approved */}
-            {profile.status === 'approved' && (
+            {profile.status === 'approved' ? (
               <span className="badge-verified flex items-center gap-1 shadow-sm">
                 <CheckCircle className="w-3 h-3" /> Verified
               </span>
-            )}
+            ) : profile.status === 'pending' ? (
+              <span className="badge-pending flex items-center gap-1 shadow-sm">
+                ⏳ Pending
+              </span>
+            ) : profile.status === 'rejected' ? (
+              <span className="badge flex items-center gap-1 shadow-sm bg-red-100 text-red-600">
+                ✗ Rejected
+              </span>
+            ) : null}
           </div>
         )}
 

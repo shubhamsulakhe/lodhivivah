@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import { Notifications } from '@/lib/notifications'
 import Link from 'next/link'
 import {
     ArrowLeft, Phone, MoreVertical, Send, Paperclip,
@@ -262,6 +263,18 @@ export default function ChatPage() {
             content: text,
             read: false,
         })
+        if (!error) {
+            try {
+                if (otherProfile?.id) {
+                    await Notifications.newMessage(
+                        otherProfile.id,
+                        myProfile.name,
+                        chatId as string,
+                        text
+                    )
+                }
+            } catch (_) { }
+        }
 
         if (error) {
             toast.error('Failed to send message')

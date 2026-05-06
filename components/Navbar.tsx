@@ -3,210 +3,217 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { Menu, X, Bell, User, LogOut, Crown, ChevronDown, Search, LayoutDashboard, Settings } from 'lucide-react'
 import Logo from './Logo'
-import { cn } from '@/lib/utils'
-import toast from 'react-hot-toast'
 import NotificationBell from './NotificationBell'
-
-const NAV = [
-  { href: '/', label: 'Home' },
-  { href: '/profiles', label: 'Find Match' },
-  { href: '/premium', label: '✦ Premium' },
-  { href: '/chat', label: '💬 Chat' },
-]
+import { Menu, X, Crown, LogOut, User, Settings, MessageCircle, Heart } from 'lucide-react'
 
 export default function Navbar() {
-  const router = useRouter()
+  const router   = useRouter()
   const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [open, setOpen] = useState(false)
+  const [user, setUser]         = useState<any>(null)
+  const [profile, setProfile]   = useState<any>(null)
   const [dropdown, setDropdown] = useState(false)
+  const [mobileOpen, setMobile] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-
-  const isHome = pathname === '/'
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      if (user) fetchProfile(user.id)
+      if (user) {
+        supabase.from('profiles').select('name,photo_url,plan,is_premium,id')
+          .eq('user_id', user.id).single()
+          .then(({ data }) => setProfile(data))
+      }
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
-      setUser(s?.user ?? null)
-      if (s?.user) fetchProfile(s.user.id)
-      else setProfile(null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null)
+      if (!session?.user) setProfile(null)
     })
-    const onScroll = () => setScrolled(window.scrollY > 30)
-    window.addEventListener('scroll', onScroll)
-    return () => { subscription.unsubscribe(); window.removeEventListener('scroll', onScroll) }
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => { subscription.unsubscribe(); window.removeEventListener('scroll', handleScroll) }
   }, [])
 
-  async function fetchProfile(uid: string) {
-    const { data } = await supabase.from('profiles').select('id,name,photo_url,plan,is_premium').eq('user_id', uid).single()
-    setProfile(data)
-  }
-
-  async function logout() {
+  async function signOut() {
     await supabase.auth.signOut()
-    toast.success('Logged out!')
+    setUser(null); setProfile(null); setDropdown(false)
     router.push('/')
-    router.refresh()
   }
 
-  const transparent = isHome && !scrolled
-  const navBg = transparent ? '' : 'bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-soft'
+  function isActive(href: string) {
+    return pathname === href
+  }
+
+  const NAV_LINKS = [
+    { href:'/',          label:'Home'        },
+    { href:'/profiles',  label:'Find Match'  },
+    { href:'/premium',   label:'Premium ✦'   },
+  ]
+
+  if (user) NAV_LINKS.splice(2, 0, { href:'/chat', label:'Messages' })
 
   return (
-    <nav className={cn('fixed inset-x-0 top-0 z-50 transition-all duration-300', navBg)}>
-      <div className="container h-18 flex items-center justify-between py-3">
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
+        ${scrolled
+          ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-orange-100'
+          : 'bg-[#fffaf6]/90 backdrop-blur-md border-b border-orange-100/50'}`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
-        <Logo variant={transparent ? 'light' : 'dark'} size="md" />
+          {/* Logo */}
+          <Logo size="md"/>
 
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-1">
-          {NAV.map(({ href, label }) => (
-            <Link key={href} href={href}
-              className={cn(
-                'px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200',
-                pathname === href
-                  ? transparent ? 'bg-white/20 text-white' : 'bg-saffron-50 text-saffron-600'
-                  : transparent ? 'text-white/85 hover:text-white hover:bg-white/15'
-                    : 'text-stone-600 hover:text-saffron-600 hover:bg-saffron-50'
-              )}>
-              {label}
-            </Link>
-          ))}
-        </div>
-
-        {/* Auth area */}
-        <div className="hidden md:flex items-center gap-3">
-          {user ? (
-            <> <NotificationBell />
-            <div className="relative">
-              <button
-                onClick={() => setDropdown(d => !d)}
-                className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-2xl transition-all duration-200',
-                  transparent ? 'text-white hover:bg-white/15' : 'hover:bg-stone-50 border border-stone-200'
-                )}
-              >
-                {profile?.photo_url
-                  ? <img src={profile.photo_url} alt="" className="w-8 h-8 rounded-xl object-cover" />
-                  : <div className="w-8 h-8 bg-saffron-100 rounded-xl flex items-center justify-center">
-                    <User className="w-4 h-4 text-saffron-600" />
-                  </div>
-                }
-                <span className={cn('text-sm font-semibold', transparent ? 'text-white' : 'text-stone-700')}>
-                  {profile?.name?.split(' ')[0] || 'Profile'}
-                </span>
-                {profile?.is_premium && <Crown className="w-3.5 h-3.5 text-gold-500 fill-gold-400" />}
-                <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', dropdown && 'rotate-180',
-                  transparent ? 'text-white/70' : 'text-stone-400')} />
-              </button>
-              {dropdown && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50"
-                  onClick={() => setDropdown(false)}>
-                  {[
-                    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-                    { href: '/profile/edit', icon: Settings, label: 'Edit Profile' },
-                    { href: '/premium', icon: Crown, label: 'Upgrade Plan', gold: true },
-                  ].map(({ href, icon: Icon, label, gold }) => (
-                    <Link key={href} href={href}
-                      className={cn('flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-stone-50 transition-colors',
-                        gold ? 'text-gold-600' : 'text-stone-700')}>
-                      <Icon className="w-4 h-4" />
-                      {label}
-                    </Link>
-                  ))}
-                  <hr className="my-1.5 border-stone-100" />
-                  <button onClick={logout}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                    <LogOut className="w-4 h-4" /> Logout
-                  </button>
-                </div>
-              )}
-            </div>
-            </>
-          ) : (
-            <>
-              <Link href="/login"
-                className={cn('text-sm font-semibold px-4 py-2 rounded-xl transition-all',
-                  transparent ? 'text-white hover:bg-white/15' : 'text-stone-600 hover:bg-stone-50')}>
-                Login
-              </Link>
-              <Link href="/login" className="btn btn-white btn-sm">
-                Register Free ✦
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Mobile toggle */}
-
-        <div className="md:hidden flex items-center gap-2">
-          {user && profile && (
-            <div className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border',
-              transparent ? 'border-white/30 text-white' : 'border-stone-200 text-stone-700'
-            )}>
-              <User className="w-3.5 h-3.5" />
-              <span className="text-sm font-semibold">
-                {profile?.name?.split(' ')[0] || 'Profile'}
-              </span>
-              {profile?.is_premium && (
-                <Crown className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
-              )}
-            </div>
-          )}
-          <button onClick={() => setOpen(o => !o)}
-            className={cn('p-2 rounded-xl transition-colors',
-              transparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:bg-stone-50')}>
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden bg-white border-t border-stone-100 shadow-xl">
-          <div className="container py-4 space-y-1">
-            {NAV.map(({ href, label }) => (
-              <Link key={href} href={href} onClick={() => setOpen(false)}
-                className={cn('flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-colors',
-                  pathname === href ? 'bg-saffron-50 text-saffron-600' : 'text-stone-700 hover:bg-stone-50')}>
-                {label}
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(l => (
+              <Link key={l.href} href={l.href}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all
+                  ${isActive(l.href)
+                    ? 'bg-orange-50 text-orange-700'
+                    : 'text-stone-500 hover:text-stone-800 hover:bg-stone-50'}`}>
+                {l.label}
               </Link>
             ))}
-            <div className="pt-3 border-t border-stone-100">
-              {user ? (
-                <>
-                  <Link href="/dashboard" onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
-                  </Link>
-                  <Link href="/profile/edit" onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <Settings className="w-4 h-4" /> Edit Profile
-                  </Link>
-                  <button onClick={() => { logout(); setOpen(false) }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl">
-                    <LogOut className="w-4 h-4" /> Logout
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            {user ? (
+              <>
+                <NotificationBell/>
+
+                {/* Mobile chat icon */}
+                <Link href="/chat"
+                  className="md:hidden w-9 h-9 rounded-full flex items-center justify-center
+                             hover:bg-stone-100 text-stone-500 transition-colors relative">
+                  <MessageCircle className="w-5 h-5"/>
+                </Link>
+
+                {/* User dropdown */}
+                <div className="relative">
+                  <button onClick={() => setDropdown(d => !d)}
+                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-2xl
+                               hover:bg-stone-100 transition-colors">
+                    {profile?.photo_url ? (
+                      <img src={profile.photo_url}
+                        className="w-8 h-8 rounded-full object-cover border-2 border-orange-200"
+                        alt=""/>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-200 to-orange-100
+                                      flex items-center justify-center text-sm font-bold text-orange-700">
+                        {profile?.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                    <div className="hidden sm:block text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-stone-800 max-w-[80px] truncate">
+                          {profile?.name?.split(' ')[0] || 'Profile'}
+                        </span>
+                        {profile?.is_premium && (
+                          <Crown className="w-3 h-3 text-yellow-500 fill-yellow-400"/>
+                        )}
+                      </div>
+                    </div>
                   </button>
-                </>
-              ) : (
-                <div className="flex gap-3 px-2">
-                  <Link href="/login" onClick={() => setOpen(false)}
-                    className="flex-1 btn btn-outline btn-sm">Login</Link>
-                  <Link href="/register" onClick={() => setOpen(false)}
-                    className="flex-1 btn btn-primary btn-sm">Register Free</Link>
+
+                  {dropdown && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setDropdown(false)}/>
+                      <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl border
+                                      border-stone-200 shadow-xl z-20 py-1.5 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-stone-100">
+                          <p className="text-sm font-semibold text-stone-800 truncate">{profile?.name}</p>
+                          <p className="text-xs text-stone-400 flex items-center gap-1 mt-0.5">
+                            {profile?.is_premium
+                              ? <><Crown className="w-3 h-3 text-yellow-500 fill-yellow-400"/> {profile?.plan?.toUpperCase()}</>
+                              : 'Free Account'}
+                          </p>
+                        </div>
+                        {[
+                          { href:'/dashboard',    icon:Heart,    label:'My Dashboard'   },
+                          { href:'/profile/edit', icon:Settings, label:'Edit Profile'   },
+                          { href:'/chat',         icon:MessageCircle, label:'Messages'  },
+                          { href:'/premium',      icon:Crown,    label:'Upgrade Plan'   },
+                        ].map(item => (
+                          <Link key={item.href} href={item.href}
+                            onClick={() => setDropdown(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-stone-600
+                                       hover:bg-stone-50 transition-colors">
+                            <item.icon className="w-4 h-4 text-stone-400"/>
+                            {item.label}
+                          </Link>
+                        ))}
+                        <div className="h-px bg-stone-100 mx-3 my-1"/>
+                        <button onClick={signOut}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm
+                                     text-red-600 hover:bg-red-50 transition-colors">
+                          <LogOut className="w-4 h-4"/>
+                          Sign Out
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
+              </>
+            ) : (
+              <>
+                <Link href="/login"
+                  className="hidden sm:block text-sm font-medium text-stone-500
+                             hover:text-stone-800 px-4 py-2 transition-colors">
+                  Login
+                </Link>
+                <Link href="/register"
+                  className="bg-[#c2410c] hover:bg-[#9a3412] text-white text-sm font-semibold
+                             px-5 py-2.5 rounded-xl transition-all hover:-translate-y-0.5
+                             shadow-sm shadow-orange-200">
+                  Register Free
+                </Link>
+              </>
+            )}
+
+            {/* Mobile menu toggle */}
+            <button onClick={() => setMobile(p => !p)}
+              className="md:hidden w-9 h-9 rounded-xl flex items-center justify-center
+                         hover:bg-stone-100 text-stone-500 transition-colors ml-1">
+              {mobileOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5"/>}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMobile(false)}>
+          <div className="absolute top-16 left-0 right-0 bg-white border-b border-stone-200
+                          shadow-xl px-4 py-4"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col gap-1">
+              {NAV_LINKS.map(l => (
+                <Link key={l.href} href={l.href}
+                  onClick={() => setMobile(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
+                    ${isActive(l.href) ? 'bg-orange-50 text-orange-700' : 'text-stone-600 hover:bg-stone-50'}`}>
+                  {l.label}
+                </Link>
+              ))}
+              {!user && (
+                <>
+                  <div className="h-px bg-stone-100 my-1"/>
+                  <Link href="/login" onClick={() => setMobile(false)}
+                    className="px-4 py-3 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50">
+                    Login
+                  </Link>
+                  <Link href="/register" onClick={() => setMobile(false)}
+                    className="flex items-center justify-center gap-2 bg-[#c2410c] text-white
+                               text-sm font-bold px-4 py-3 rounded-xl mt-1">
+                    Register Free →
+                  </Link>
+                </>
               )}
             </div>
           </div>
         </div>
       )}
-    </nav>
+    </>
   )
 }

@@ -1,118 +1,95 @@
+'use client'
+import { useState } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { Mail, Phone, MessageCircle, MapPin, Clock } from 'lucide-react'
+import { Mail, MessageCircle, Phone } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function ContactPage() {
+  const [form, setForm] = useState({ name:'', email:'', message:'' })
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.name || !form.email || !form.message) { toast.error('Please fill all fields'); return }
+    setLoading(true)
+    // Open mailto
+    window.location.href = `mailto:support@wedly.co.in?subject=Query from ${form.name}&body=${form.message}%0A%0AFrom: ${form.email}`
+    toast.success('Opening email client…')
+    setLoading(false)
+  }
+
   return (
-    <>
+    <div className="min-h-screen bg-[#fffaf6]">
       <Navbar/>
-      <main className="pt-20 min-h-screen bg-cream">
-        <div className="bg-gradient-to-r from-saffron-800 to-saffron-600 py-14">
-          <div className="container text-center">
-            <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Contact Us</h1>
-            <p className="text-white/70 text-lg">हम आपकी सहायता करने के लिए यहाँ हैं</p>
+      <div className="pt-20 pb-16 px-4 sm:px-8">
+        <div className="max-w-3xl mx-auto py-12">
+
+          <div className="text-center mb-10">
+            <p className="text-orange-500 text-[11px] font-semibold tracking-[3px] uppercase mb-3">Get in Touch</p>
+            <h1 className="text-3xl sm:text-4xl font-black text-[#431407]"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1px' }}>
+              हम यहाँ हैं।<br/>
+              <em className="text-orange-600" style={{ fontStyle:'italic', fontWeight:300 }}>We're here to help.</em>
+            </h1>
           </div>
-        </div>
 
-        <div className="container py-12">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-
-              {[
-                {
-                  icon: MessageCircle,
-                  color: 'bg-green-50 text-green-600',
-                  title: 'WhatsApp',
-                  desc: 'Fastest response — chat with us',
-                  value: '+91 87706 07574',
-                  href: 'https://wa.me/918770607574?text=Hello Wedly Team!',
-                  btn: 'Chat on WhatsApp',
-                  btnColor: 'bg-green-500 hover:bg-green-600 text-white',
-                },
-                {
-                  icon: Mail,
-                  color: 'bg-blue-50 text-blue-600',
-                  title: 'Email',
-                  desc: 'For detailed queries',
-                  value: 'support@wedly.co.in',
-                  href: 'mailto:support@wedly.co.in',
-                  btn: 'Send Email',
-                  btnColor: 'bg-saffron-500 hover:bg-saffron-600 text-white',
-                },
-                {
-                  icon: Phone,
-                  color: 'bg-purple-50 text-purple-600',
-                  title: 'Phone Call',
-                  desc: 'Mon-Sat 10AM to 6PM',
-                  value: '+91 87706 07574',
-                  href: 'tel:+918770607574',
-                  btn: 'Call Now',
-                  btnColor: 'bg-purple-500 hover:bg-purple-600 text-white',
-                },
-                {
-                  icon: MapPin,
-                  color: 'bg-red-50 text-red-600',
-                  title: 'Location',
-                  desc: 'Balaghat, Madhya Pradesh',
-                  value: 'India — Serving Nationwide',
-                  href: '#',
-                  btn: '',
-                  btnColor: '',
-                },
-              ].map(({ icon: Icon, color, title, desc, value, href, btn, btnColor }) => (
-                <div key={title} className="card p-6">
-                  <div className={`w-12 h-12 ${color} rounded-2xl flex items-center justify-center mb-4`}>
-                    <Icon className="w-6 h-6"/>
-                  </div>
-                  <h3 className="font-bold text-stone-900 mb-1">{title}</h3>
-                  <p className="text-stone-400 text-sm mb-2">{desc}</p>
-                  <p className="font-semibold text-stone-700 mb-4">{value}</p>
-                  {btn && (
-                    <a href={href} target="_blank" rel="noopener noreferrer"
-                      className={`inline-block px-5 py-2.5 rounded-xl font-bold text-sm transition-colors ${btnColor}`}>
-                      {btn}
-                    </a>
-                  )}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+            {[
+              { icon:Mail,           title:'Email',     val:'support@wedly.co.in', href:'mailto:support@wedly.co.in', bg:'bg-orange-50', ic:'text-orange-600' },
+              { icon:MessageCircle,  title:'WhatsApp',  val:'Chat with us',        href:'https://wa.me/918770607574',  bg:'bg-green-50',  ic:'text-green-600'  },
+              { icon:Phone,          title:'Support',   val:'Mon–Sat 10am–6pm',    href:'#',                          bg:'bg-blue-50',   ic:'text-blue-600'   },
+            ].map(c => (
+              <a key={c.title} href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined}
+                className="bg-white rounded-2xl p-5 border border-orange-100 text-center
+                           hover:border-orange-300 hover:shadow-md transition-all">
+                <div className={`w-11 h-11 ${c.bg} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                  <c.icon className={`w-5 h-5 ${c.ic}`}/>
                 </div>
-              ))}
-            </div>
-
-            {/* Hours */}
-            <div className="card p-6 mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <Clock className="w-5 h-5 text-saffron-600"/>
-                <h3 className="font-bold text-stone-900">Support Hours</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-stone-500">Monday — Saturday</p>
-                  <p className="font-semibold text-stone-800">10:00 AM — 6:00 PM</p>
-                </div>
-                <div>
-                  <p className="text-stone-500">Sunday</p>
-                  <p className="font-semibold text-stone-800">Closed</p>
-                </div>
-              </div>
-            </div>
-
-            {/* FAQ prompt */}
-            <div className="card p-6 bg-saffron-50 border border-saffron-200 text-center">
-              <p className="text-stone-700 font-semibold mb-2">
-                Looking for quick answers?
-              </p>
-              <p className="text-stone-500 text-sm mb-4">
-                Check our Help & FAQ section for common questions.
-              </p>
-              <a href="/help"
-                className="inline-block px-6 py-2.5 bg-saffron-500 hover:bg-saffron-600
-                           text-white font-bold rounded-xl text-sm transition-colors">
-                View Help & FAQ →
+                <div className="font-semibold text-stone-800 text-sm mb-1">{c.title}</div>
+                <div className="text-stone-400 text-xs">{c.val}</div>
               </a>
-            </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-3xl border border-orange-100 p-6 sm:p-8">
+            <h2 className="text-lg font-bold text-stone-800 mb-5">Send us a message</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-stone-500 block mb-1.5">Your Name</label>
+                  <input value={form.name} onChange={e => setForm(p => ({ ...p, name:e.target.value }))}
+                    placeholder="Rahul Lodhi"
+                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm
+                               outline-none focus:border-orange-400 transition-colors bg-[#fffaf6]"/>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-stone-500 block mb-1.5">Email</label>
+                  <input type="email" value={form.email}
+                    onChange={e => setForm(p => ({ ...p, email:e.target.value }))}
+                    placeholder="you@email.com"
+                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm
+                               outline-none focus:border-orange-400 transition-colors bg-[#fffaf6]"/>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-stone-500 block mb-1.5">Message</label>
+                <textarea value={form.message}
+                  onChange={e => setForm(p => ({ ...p, message:e.target.value }))}
+                  rows={4} placeholder="How can we help you?"
+                  className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm
+                             outline-none focus:border-orange-400 transition-colors resize-none bg-[#fffaf6]"/>
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full bg-[#c2410c] hover:bg-[#9a3412] text-white font-bold
+                           py-3.5 rounded-2xl transition-colors disabled:opacity-60 text-sm">
+                {loading ? 'Sending…' : 'Send Message →'}
+              </button>
+            </form>
           </div>
         </div>
-      </main>
+      </div>
       <Footer/>
-    </>
+    </div>
   )
 }

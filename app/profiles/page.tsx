@@ -1,413 +1,477 @@
 'use client'
-import { Suspense } from 'react'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import ProfileCard, { ProfileCardSkeleton } from '@/components/ProfileCard'
-import { Search, X, SlidersHorizontal, Crown } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { EDUCATION, STATES } from '@/lib/utils'
 import Link from 'next/link'
+import { Search, SlidersHorizontal, Heart, Crown, X, Check } from 'lucide-react'
+import { getAge } from '@/lib/utils'
+import { UpgradeBar } from '@/components/PremiumNudge'
+import toast from 'react-hot-toast'
 
-function ProfilesContent() {
-  const [profiles, setProfiles]       = useState<any[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [myProfile, setMyProfile]     = useState<any>(null)
-  const [sentInterests, setSent]      = useState<Set<string>>(new Set())
+const COMMUNITIES = [
+  { value: 'all', label: 'All Communities' },
+  { value: 'lodhi_kshatriya', label: 'Lodhi Kshatriya' },
+  { value: 'pawar_kunbi', label: 'Pawar Kunbi' },
+  { value: 'kirar', label: 'Kirar Samaj' },
+  { value: 'kurmi', label: 'Kurmi Samaj' },
+  { value: 'teli', label: 'Teli Samaj' },
+  { value: 'yadav', label: 'Yadav Samaj' },
+  { value: 'gond', label: 'Gond Samaj' },
+  { value: 'rajput', label: 'Rajput Samaj' },
+  { value: 'brahmin', label: 'Brahmin Samaj' },
+]
+
+export default function ProfilesPage() {
+  const router = useRouter()
+  const [profiles, setProfiles] = useState<any[]>([])
+  const [filtered, setFiltered] = useState<any[]>([])
+  const [myProfile, setMyProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [gender, setGender] = useState<'all' | 'male' | 'female'>('all')
+  const [community, setCommunity] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
-  const [isLoggedIn, setIsLoggedIn]   = useState(false)
-  const [isPremium, setIsPremium]     = useState(false)
-  const [isAdmin, setIsAdmin]         = useState(false)
-  const [dailyCount, setDailyCount]   = useState(0)
-  const [adminUserIds, setAdminIds]   = useState<string[]>([])
-  const [filters, setFilters]         = useState({
-    state: '', education: '', age_min: '', age_max: '',
-  })
+  const [sentInterests, setSentInterests] = useState<Set<string>>(new Set())
+  const [sending, setSending] = useState<string | null>(null)
 
-  const FREE_PROFILE_LIMIT  = 10
-  const FREE_INTEREST_LIMIT = 2
-  const GUEST_PROFILE_LIMIT = 4
+  useEffect(() => { loadData() }, [])
 
-  useEffect(() => { initPage() }, [])
+  useEffect(() => {
+    let result = profiles
+    if (search) {
+      const q = search.toLowerCase()
+      result = result.filter(p =>
+        p.name?.toLowerCase().includes(q) ||
+        p.city?.toLowerCase().includes(q) ||
+        p.occupation?.toLowerCase().includes(q)
+      )
+    }
+    if (gender !== 'all') result = result.filter(p => p.gender === gender)
+    if (community !== 'all') result = result.filter(p => p.community === community)
+    setFiltered(result)
+  }, [search, gender, community, profiles])
 
-  async function getAdminIds(): Promise<string[]> {
-    const { data } = await supabase.from('admin_users').select('user_id')
-    const ids = (data || []).map((a: any) => a.user_id)
-    setAdminIds(ids)
-    return ids
-  }
-
-  async function initPage() {
+  async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/login'); return }
 
-    // Get admin IDs first — needed everywhere
-    const admins = await getAdminIds()
-
-    if (!user) {
-      setIsLoggedIn(false)
-      fetchGuestProfiles(admins)
-      return
-    }
-
-    setIsLoggedIn(true)
-
-    const { data: mine } = await supabase
+    const { data: prof } = await supabase
       .from('profiles').select('*').eq('user_id', user.id).single()
+    if (!prof) { router.push('/onboard'); return }
+    setMyProfile(prof)
 
-    if (mine) {
-      setMyProfile(mine)
-      setIsPremium(mine.is_premium)
+    // ── Plan access — defined HERE before query ──
+    const plan = prof?.plan || 'free'
+    const isGold = plan === 'gold'
+    const isSilver = plan === 'silver' || isGold
+    const showAllCommunities = isGold
 
-      const { data: ints } = await supabase
-        .from('interests').select('receiver_id').eq('sender_id', mine.id)
-      if (ints) setSent(new Set(ints.map((i: any) => i.receiver_id)))
 
-      const today = new Date().toISOString().split('T')[0]
-      const { data: limit } = await supabase
-        .from('interest_limits').select('count')
-        .eq('profile_id', mine.id).eq('date', today).single()
-      setDailyCount(limit?.count || 0)
-
-      // Check if admin
-      const adminCheck = admins.includes(user.id)
-      setIsAdmin(adminCheck)
-
-      if (adminCheck) {
-        fetchAllProfilesForAdmin(admins, mine.id)
-      } else {
-        fetchProfiles(mine, admins)
-      }
-    }
-  }
-
-  async function fetchAllProfilesForAdmin(admins: string[], myProfileId: string) {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('profiles').select('*')
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
-      .limit(200)
-
-    setLoading(false)
-    if (error) { toast.error('Error loading'); return }
-
-    // Admin sees all BUT NOT their own profile
-    setProfiles((data || []).filter(p =>
-      p.id !== myProfileId && !admins.includes(p.user_id)
-    ))
-    setIsPremium(true)
-  }
-
-  async function fetchGuestProfiles(admins: string[]) {
-    setLoading(true)
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, name, gender, date_of_birth, height_cm, city, state, education, occupation, gotra, photo_url, is_premium, plan, user_id')
-      .eq('status', 'approved')
-      .limit(20)
-
-    const shuffled = (data || [])
-      .filter(p => !admins.includes(p.user_id))
-      .sort(() => Math.random() - 0.5)
-      .slice(0, GUEST_PROFILE_LIMIT)
-
-    setProfiles(shuffled)
-    setLoading(false)
-  }
-
-  async function fetchProfiles(mine: any, admins?: string[]) {
-    setLoading(true)
-    const adminIds = admins || adminUserIds
-    const oppositeGender = mine.gender === 'female' ? 'male' : 'female'
-
-    let q = supabase.from('profiles').select('*')
-      .eq('status', 'approved')
-      .eq('gender', oppositeGender)
-      .neq('id', mine.id)
-
-    if (filters.state)     q = q.eq('state', filters.state)
-    if (filters.education) q = q.eq('education', filters.education)
-    if (filters.age_min) {
-      const d = new Date(); d.setFullYear(d.getFullYear() - Number(filters.age_min))
-      q = q.lte('date_of_birth', d.toISOString().split('T')[0])
-    }
-    if (filters.age_max) {
-      const d = new Date(); d.setFullYear(d.getFullYear() - Number(filters.age_max))
-      q = q.gte('date_of_birth', d.toISOString().split('T')[0])
-    }
-
-    const { data, error } = await q.limit(200)
-    setLoading(false)
-    if (error) { toast.error('Error loading profiles'); return }
-
-    // Exclude admin profiles
-    let result = (data || []).filter(p => !adminIds.includes(p.user_id))
-
-    if (!mine.is_premium) {
-      const sameState  = result.filter(p => p.state === mine.state).sort(() => Math.random() - 0.5)
-      const otherState = result.filter(p => p.state !== mine.state).sort(() => Math.random() - 0.5)
-      const combined   = [...sameState.slice(0, 6), ...otherState.slice(0, 4)].slice(0, FREE_PROFILE_LIMIT)
-      setProfiles(combined)
+    // Admin sees all, others see opposite gender by default
+    const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID
+    if (user.id === adminId) {
+      setGender('all')
     } else {
-      result.sort((a, b) => (b.is_premium ? 1 : 0) - (a.is_premium ? 1 : 0))
-      setProfiles(result)
+      setGender(prof.gender === 'male' ? 'female' : 'male')
     }
+
+    // ── Build query ──
+
+    let query = supabase
+      .from('profiles')
+      .select('id,name,photo_url,date_of_birth,city,state,education,occupation,plan,is_premium,gender,community,gotra,about_me,completeness')
+      .eq('status', 'approved')
+      .neq('user_id', user.id)
+
+    if (adminId) query = (query as any).neq('user_id', adminId)
+
+    // Gold = see all communities | Free/Silver = own community only
+    // Admin sees all communities, others restricted by plan
+    const isAdmin = user.id === process.env.NEXT_PUBLIC_ADMIN_USER_ID
+    if (!isAdmin && !showAllCommunities && prof?.community) {
+      query = (query as any).eq('community', prof.community)
+    }
+
+    // Sort: Gold/Silver first, then by completeness descending
+    const { data } = await (query as any)
+      .order('is_premium', { ascending: false })
+      .order('completeness', { ascending: false })
+      .limit(isSilver ? 200 : 20)
+
+    setProfiles(data || [])
+
+    // Load sent interests
+    const { data: interests } = await supabase
+      .from('interests').select('receiver_id').eq('sender_id', prof.id)
+    if (interests) setSentInterests(new Set(interests.map((i: any) => i.receiver_id)))
+
+    console.log('Admin ID:', process.env.NEXT_PUBLIC_ADMIN_USER_ID)
+
+    setLoading(false)
   }
 
   async function sendInterest(receiverId: string) {
-    if (!myProfile) { toast.error('Login करें'); return }
+    if (!myProfile || sending) return
 
-    const receiver = profiles.find(p => p.id === receiverId)
-    if (receiver && receiver.gender === myProfile.gender) {
-      toast.error('Same gender को interest नहीं भेज सकते')
+    // Check daily limit for free users
+    const plan = myProfile?.plan || 'free'
+    const isSilver = plan === 'silver' || plan === 'gold'
+    if (!isSilver && sentInterests.size >= 2) {
+      toast.error('Daily limit reached! Upgrade to Silver for unlimited interests.', { duration: 4000 })
       return
     }
 
-    if (!isPremium && dailyCount >= FREE_INTEREST_LIMIT) {
-      toast.error(`Free members can send only ${FREE_INTEREST_LIMIT} interests per day. Upgrade to Premium!`)
-      return
-    }
+    setSending(receiverId)
+    try {
+      const { error } = await supabase.from('interests').insert({
+        sender_id: myProfile.id, receiver_id: receiverId, status: 'pending'
+      })
+      if (error) throw error
+      setSentInterests(p => new Set([...p, receiverId]))
+      toast.success('Interest sent! 💝')
 
-    const { error } = await supabase.from('interests').insert({
-      sender_id: myProfile.id, receiver_id: receiverId
-    })
+      // Notify receiver
+      try {
+        await supabase.from('notifications').insert({
+          user_id: receiverId,
+          type: 'interest_received',
+          title: `💝 ${myProfile.name} ने आपको interest भेजा!`,
+          body: `${myProfile.city || ''} से — profile देखें`,
+          link: `/profiles/${myProfile.id}`,
+          read: false,
+        })
+      } catch (_) { }
 
-    if (error) {
-      if (error.code === '23505') toast.error('Interest पहले ही भेज दिया है')
-      else toast.error('Error हुआ')
-      return
-    }
 
-    const today = new Date().toISOString().split('T')[0]
-    await supabase.from('interest_limits').upsert({
-      profile_id: myProfile.id, date: today, count: dailyCount + 1,
-    }, { onConflict: 'profile_id,date' })
-
-    setDailyCount(prev => prev + 1)
-    setSent(prev => new Set(Array.from(prev).concat(receiverId)))
-    toast.success('Interest भेज दिया! 💝')
+    } catch (e: any) {
+      if (e.message?.includes('unique')) toast.error('Interest already sent!')
+      else toast.error('Failed to send interest')
+    } finally { setSending(null) }
   }
 
-  const setF   = (k: string, v: string) => setFilters(p => ({ ...p, [k]: v }))
-  const clearF = () => setFilters({ state: '', education: '', age_min: '', age_max: '' })
-  const activeCount = Object.values(filters).filter(Boolean).length
+  // ── Computed plan values from loaded myProfile ──
+  const plan = myProfile?.plan || 'free'
+  const isGold = plan === 'gold'
+  const isSilver = plan === 'silver' || isGold
+  const isLimited = !isSilver
+  const showAllComms = isGold
+
+  const visibleCount = isLimited ? Math.min(filtered.length, 10) : filtered.length
+  const visibleProfiles = filtered.slice(0, visibleCount)
+
+  const avatarColors: Record<string, [string, string]> = {
+    A: ['#fce7f3', '#9d174d'], B: ['#ede9fe', '#4c1d95'], C: ['#d1fae5', '#065f46'],
+    D: ['#fef9c3', '#713f12'], E: ['#dbeafe', '#1e40af'], M: ['#fce7f3', '#9d174d'],
+    P: ['#fce7f3', '#9d174d'], R: ['#ede9fe', '#4c1d95'], S: ['#d1fae5', '#065f46'],
+    V: ['#fef9c3', '#713f12'],
+  }
+  function getAvatar(name: string) {
+    const k = name?.charAt(0)?.toUpperCase() || 'A'
+    return avatarColors[k] || ['#f1f5f9', '#475569']
+  }
 
   return (
-    <>
+    <div className="min-h-screen bg-[#fffaf6]">
       <Navbar />
-      <main className="pt-20 min-h-screen bg-cream">
+      <div className="pt-20 pb-24 max-w-6xl mx-auto px-4 sm:px-6">
 
-        <div className="bg-gradient-to-r from-saffron-800 via-saffron-700 to-saffron-500 py-12">
-          <div className="container">
-            <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">
-              Find Your Match 💑
-            </h1>
-            <p className="text-white/75 text-lg">
-              {loading ? 'Loading...' : `${profiles.length} profiles found`}
-              {isLoggedIn && !isPremium && (
-                <span className="ml-3 bg-white/20 text-white text-xs px-3 py-1 rounded-full">
-                  Free: {dailyCount}/{FREE_INTEREST_LIMIT} interests today
+        {/* Header */}
+        <div className="py-8 sm:py-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-[#431407] mb-1"
+                style={{ fontFamily: 'Georgia,serif' }}>Find Your Match</h1>
+              <p className="text-stone-400 text-sm">
+                {filtered.length} verified profiles
+                {!showAllComms && myProfile?.community
+                  ? ` from ${myProfile.community.replace(/_/g, ' ')}`
+                  : ' across all communities'}
+              </p>
+            </div>
+            {/* Community badge */}
+            {!showAllComms && (
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-[10px] bg-orange-50 border border-orange-200 text-orange-700
+                                 px-2.5 py-1 rounded-full font-medium">
+                  🏘️ {myProfile?.community?.replace(/_/g, ' ') || 'Your Community'}
                 </span>
-              )}
-            </p>
+                <Link href="/premium"
+                  className="text-[10px] text-stone-400 hover:text-orange-600 transition-colors">
+                  Gold → Browse all ↗
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="container py-8">
-
-          {/* Guest Banner */}
-          {!isLoggedIn && (
-            <div className="card p-5 mb-6 bg-gradient-to-r from-saffron-50 to-yellow-50
-                            border-2 border-saffron-200 flex flex-col sm:flex-row
-                            items-center justify-between gap-4">
-              <div>
-                <p className="font-black text-stone-900 text-lg">
-                  🔒 Showing {GUEST_PROFILE_LIMIT} of 2000+ profiles
-                </p>
-                <p className="text-stone-500 text-sm mt-1">
-                  Register free to see all profiles and send interests
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Link href="/login" className="btn btn-outline btn-md">Login</Link>
-                <Link href="/login" className="btn btn-primary btn-md">Register Free</Link>
-              </div>
+        {/* Search + Filters */}
+        <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-4 mb-6">
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300" />
+              <input value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Search by name, city, occupation…"
+                className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl
+                           text-sm outline-none focus:border-orange-400 focus:bg-white transition-all"/>
             </div>
-          )}
+            <button onClick={() => setShowFilters(p => !p)}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium
+                          transition-all flex-shrink-0
+                ${showFilters ? 'bg-orange-50 border-orange-400 text-orange-700' : 'border-stone-200 text-stone-600 hover:border-orange-300'}`}>
+              <SlidersHorizontal className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </button>
+          </div>
 
-          {/* Free member banner */}
-          {isLoggedIn && !isPremium && (
-            <div className="card p-4 mb-6 bg-gradient-to-r from-saffron-50 to-yellow-50
-                            border border-saffron-200 flex flex-col sm:flex-row
-                            items-center justify-between gap-3">
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-stone-100 space-y-4">
               <div>
-                <p className="font-bold text-stone-800">
-                  ⚡ Free Plan — Showing {FREE_PROFILE_LIMIT} random profiles today
-                </p>
-                <p className="text-stone-500 text-sm">
-                  Interests remaining: {Math.max(0, FREE_INTEREST_LIMIT - dailyCount)}/{FREE_INTEREST_LIMIT} •
-                  Upgrade for unlimited access
-                </p>
-              </div>
-              <Link href="/premium" className="btn btn-primary btn-sm whitespace-nowrap">
-                <Crown className="w-4 h-4" /> Upgrade
-              </Link>
-            </div>
-          )}
-
-          {/* Filters */}
-          {isLoggedIn && (
-            <>
-              <div className="flex gap-3 mb-5 flex-wrap items-center">
-                <button onClick={() => setShowFilters(f => !f)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold border transition-all
-                    ${showFilters
-                      ? 'bg-saffron-50 border-saffron-400 text-saffron-700'
-                      : 'bg-white border-stone-200 text-stone-600'}`}>
-                  <SlidersHorizontal className="w-4 h-4" />
-                  Filters {activeCount > 0 && `(${activeCount})`}
-                </button>
-                <button
-                  onClick={() => isAdmin
-                    ? fetchAllProfilesForAdmin(adminUserIds, myProfile?.id)
-                    : fetchProfiles(myProfile)}
-                  className="px-5 py-2.5 rounded-2xl text-sm font-bold bg-white border border-stone-200 text-stone-600 hover:bg-saffron-50">
-                  🔀 Shuffle Profiles
-                </button>
-              </div>
-
-              {showFilters && (
-                <div className="card p-5 mb-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <label className="label text-xs">State</label>
-                      <select className="select text-sm" value={filters.state}
-                        onChange={e => setF('state', e.target.value)}>
-                        <option value="">All States</option>
-                        {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="label text-xs">Education</label>
-                      <select className="select text-sm" value={filters.education}
-                        onChange={e => setF('education', e.target.value)}>
-                        <option value="">Any</option>
-                        {EDUCATION.map(e => <option key={e} value={e}>{e}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="label text-xs">Min Age</label>
-                      <select className="select text-sm" value={filters.age_min}
-                        onChange={e => setF('age_min', e.target.value)}>
-                        <option value="">Any</option>
-                        {Array.from({ length: 23 }, (_, i) => 18 + i).map(a => (
-                          <option key={a} value={a}>{a} yrs</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="label text-xs">Max Age</label>
-                      <select className="select text-sm" value={filters.age_max}
-                        onChange={e => setF('age_max', e.target.value)}>
-                        <option value="">Any</option>
-                        {Array.from({ length: 23 }, (_, i) => 18 + i).map(a => (
-                          <option key={a} value={a}>{a} yrs</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => fetchProfiles(myProfile)} className="btn btn-primary btn-sm">
-                      <Search className="w-4 h-4" /> Apply
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-2">
+                  Looking for
+                </label>
+                <div className="flex gap-2">
+                  {[{ v: 'all', l: 'Everyone' }, { v: 'female', l: 'Bride 👰' }, { v: 'male', l: 'Groom 🤵' }].map(g => (
+                    <button key={g.v} onClick={() => setGender(g.v as any)}
+                      className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all
+                        ${gender === g.v ? 'bg-orange-50 border-orange-400 text-orange-700' : 'border-stone-200 text-stone-600 hover:border-orange-300'}`}>
+                      {g.l}
                     </button>
-                    {activeCount > 0 && (
-                      <button onClick={() => { clearF(); fetchProfiles(myProfile) }}
-                        className="btn btn-outline btn-sm">
-                        <X className="w-4 h-4" /> Clear
+                  ))}
+                </div>
+              </div>
+
+              {/* Community filter — only show if Gold */}
+              {showAllComms ? (
+                <div>
+                  <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide block mb-2">
+                    Community · समाज
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {COMMUNITIES.map(c => (
+                      <button key={c.value} onClick={() => setCommunity(c.value)}
+                        className={`px-3 py-2 rounded-xl border text-xs font-medium transition-all
+                          ${community === c.value ? 'bg-orange-50 border-orange-400 text-orange-700' : 'border-stone-200 text-stone-600 hover:border-orange-300'}`}>
+                        {c.label}
                       </button>
-                    )}
+                    ))}
                   </div>
                 </div>
-              )}
-            </>
-          )}
-
-          {/* Profiles Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => <ProfileCardSkeleton key={i} />)}
-            </div>
-          ) : profiles.length === 0 ? (
-            <div className="text-center py-24">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-bold text-stone-700 mb-2">No profiles found</h3>
-              <p className="text-stone-400 mb-6">Try changing filters</p>
-              <button onClick={() => { clearF(); fetchProfiles(myProfile) }}
-                className="btn btn-outline btn-md">Shuffle Again</button>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {profiles.map((p, index) => (
-                  <div key={p.id} className="relative">
-                    {!isLoggedIn && index >= GUEST_PROFILE_LIMIT ? null : (
-                      <ProfileCard
-                        profile={p}
-                        onInterest={isLoggedIn ? sendInterest : undefined}
-                        interestSent={sentInterests.has(p.id)}
-                        blurred={!isLoggedIn}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {isLoggedIn && !isPremium && (
-                <div className="mt-10 card p-8 text-center bg-gradient-to-br from-saffron-50 to-yellow-50 border-2 border-saffron-200">
-                  <div className="text-4xl mb-3">👑</div>
-                  <h3 className="text-xl font-black text-stone-900 mb-2">See 2000+ more profiles</h3>
-                  <p className="text-stone-500 mb-5">
-                    Get Premium for unlimited profiles, interests and contact details
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                  <p className="text-xs text-yellow-700 font-medium flex items-center gap-2">
+                    <Crown className="w-3.5 h-3.5 text-yellow-600" />
+                    <span>
+                      Upgrade to <strong>Gold</strong> to browse all 11+ communities across India
+                    </span>
                   </p>
-                  <Link href="/premium" className="btn btn-primary btn-lg">
-                    <Crown className="w-5 h-5" /> Upgrade to Premium
+                  <Link href="/premium"
+                    className="text-[10px] text-yellow-600 font-bold hover:underline mt-1 block ml-5">
+                    Get Gold — ₹399/mo →
                   </Link>
                 </div>
               )}
 
-              {!isLoggedIn && (
-                <div className="mt-10 card p-8 text-center bg-gradient-to-br from-saffron-50 to-yellow-50 border-2 border-saffron-200">
-                  <div className="text-4xl mb-3">🔒</div>
-                  <h3 className="text-xl font-black text-stone-900 mb-2">
-                    Register to see 2000+ profiles
-                  </h3>
-                  <p className="text-stone-500 mb-5">
-                    Free registration — join now and find your match
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <Link href="/login" className="btn btn-outline btn-lg">Login</Link>
-                    <Link href="/login" className="btn btn-primary btn-lg">Register Free</Link>
-                  </div>
-                </div>
+              {(search || gender !== 'all' || community !== 'all') && (
+                <button onClick={() => { setSearch(''); setGender('all'); setCommunity('all') }}
+                  className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 font-medium">
+                  <X className="w-3.5 h-3.5" /> Clear all filters
+                </button>
               )}
-            </>
+            </div>
           )}
         </div>
-      </main>
-      <Footer />
-    </>
-  )
-}
 
-export default function ProfilesPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center pt-20">
-        <div className="w-10 h-10 border-4 border-saffron-200 border-t-saffron-500 rounded-full animate-spin" />
+        {/* Interest limit warning for free users */}
+        {isLimited && sentInterests.size >= 2 && (
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-5
+                          flex items-center gap-3">
+            <Crown className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-orange-800">Daily interest limit reached</p>
+              <p className="text-xs text-orange-600">Upgrade to Silver for unlimited interests</p>
+            </div>
+            <Link href="/premium"
+              className="bg-orange-500 text-white text-xs font-bold px-4 py-2
+                         rounded-xl hover:bg-orange-600 transition-colors flex-shrink-0">
+              Upgrade
+            </Link>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-stone-100 overflow-hidden animate-pulse">
+                <div className="h-36 bg-stone-100" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-stone-100 rounded w-2/3" />
+                  <div className="h-3 bg-stone-100 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-5xl mb-4">🔍</div>
+            <p className="font-semibold text-stone-700 mb-2">No profiles found</p>
+            <p className="text-stone-400 text-sm mb-4">Try changing your filters</p>
+            <button onClick={() => { setSearch(''); setGender('all'); setCommunity('all') }}
+              className="text-orange-600 text-sm font-semibold hover:underline">Clear filters</button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {visibleProfiles.map((p, idx) => {
+                const [avBg, avColor] = getAvatar(p.name)
+                const isSent = sentInterests.has(p.id)
+                const isBlurred = isLimited && idx >= 6
+
+                return (
+                  <div key={p.id}
+                    className={`bg-white rounded-2xl border border-orange-100 overflow-hidden
+                                hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100
+                                transition-all duration-300 hover:-translate-y-1 group`}>
+                    <div className="relative">
+                      {p.photo_url ? (
+                        <img src={p.photo_url}
+                          className={`w-full h-36 sm:h-44 object-cover transition-all
+                            ${isBlurred ? 'blur-md scale-105' : ''}`}
+                          alt={p.name} />
+                      ) : (
+                        <div className={`w-full h-36 sm:h-44 flex items-center justify-center text-4xl font-black
+                          ${isBlurred ? 'blur-md' : ''}`}
+                          style={{ background: `linear-gradient(135deg,${avBg},${avBg}CC)`, color: avColor }}>
+                          {p.name?.charAt(0)}
+                        </div>
+                      )}
+
+                      {isBlurred && (
+                        <div className="absolute inset-0 backdrop-blur-[2px] bg-white/30
+                                        flex flex-col items-center justify-center p-3">
+                          <div className="bg-white rounded-2xl p-3 shadow-lg text-center">
+                            <Crown className="w-5 h-5 text-orange-500 mx-auto mb-1" />
+                            <p className="text-xs font-bold text-stone-800">Upgrade to see</p>
+                            <Link href="/premium"
+                              className="text-[10px] text-orange-600 font-semibold hover:underline">
+                              Go Premium →
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+
+                      {p.plan === 'gold' && !isBlurred && (
+                        <div className="absolute top-2 right-2 bg-yellow-400 rounded-lg px-2 py-0.5
+                                        flex items-center gap-1 shadow-sm">
+                          <Crown className="w-3 h-3 text-yellow-900" />
+                          <span className="text-[10px] font-bold text-yellow-900">Gold</span>
+                        </div>
+                      )}
+
+                      <div className="absolute top-2 left-2 w-6 h-6 bg-emerald-500 rounded-full
+                                      flex items-center justify-center shadow-sm">
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </div>
+
+                    <div className="p-3 sm:p-4">
+                      <Link href={isBlurred ? '/premium' : `/profiles/${p.id}`}>
+                        <h3 className={`font-bold text-stone-900 text-sm mb-0.5 truncate
+                                        group-hover:text-orange-700 transition-colors
+                                        ${isBlurred ? 'blur-sm select-none' : ''}`}>
+                          {isBlurred ? 'Hidden Profile' : p.name}
+                        </h3>
+                      </Link>
+                      <p className={`text-stone-400 text-xs mb-2 ${isBlurred ? 'blur-sm' : ''}`}>
+                        {p.date_of_birth ? `${getAge(p.date_of_birth)} yrs` : '?'} · {p.city || '?'}
+                      </p>
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {p.community && !isBlurred && (
+                          <span className="text-[9px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded-full font-medium capitalize">
+                            {p.community.replace(/_/g, ' ')}
+                          </span>
+                        )}
+                        {p.occupation && !isBlurred && (
+                          <span className="text-[9px] bg-stone-50 text-stone-500 px-1.5 py-0.5 rounded-full">
+                            {p.occupation}
+                          </span>
+                        )}
+                      </div>
+
+                      {!isBlurred ? (
+                        <button onClick={() => sendInterest(p.id)}
+                          disabled={isSent || sending === p.id || (isLimited && sentInterests.size >= 2)}
+                          className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-xl
+                                      text-xs font-bold transition-all
+                            ${isSent
+                              ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
+                              : (isLimited && sentInterests.size >= 2)
+                                ? 'bg-stone-50 text-stone-400 border border-stone-200 cursor-not-allowed'
+                                : 'bg-orange-500 hover:bg-orange-600 text-white'}`}>
+                          {isSent
+                            ? <><Check className="w-3.5 h-3.5" /> Sent</>
+                            : sending === p.id
+                              ? <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                              : (isLimited && sentInterests.size >= 2)
+                                ? '🔒 Limit reached'
+                                : <><Heart className="w-3.5 h-3.5" /> Send Interest</>}
+                        </button>
+                      ) : (
+                        <Link href="/premium"
+                          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl
+                                     text-xs font-bold bg-orange-50 text-orange-600 border border-orange-200
+                                     hover:bg-orange-100 transition-colors">
+                          <Crown className="w-3.5 h-3.5" /> Unlock Profile
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Premium upsell */}
+            {isLimited && filtered.length > 6 && (
+              <div className="mt-8 bg-[#7c2d12] rounded-3xl p-6 sm:p-8 text-center">
+                <Crown className="w-8 h-8 text-yellow-400 fill-yellow-400 mx-auto mb-3" />
+                <h3 className="text-white font-black text-lg mb-2"
+                  style={{ fontFamily: 'Georgia,serif' }}>
+                  {filtered.length - 6}+ more profiles waiting
+                </h3>
+                <p className="text-orange-200/60 text-sm mb-2">
+                  Upgrade to Silver — unlimited profiles, clear photos, view contacts.
+                </p>
+                <p className="text-orange-300/50 text-xs mb-5">
+                  Gold members browse <strong className="text-orange-300">all 11 communities</strong> across India
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link href="/premium?plan=silver"
+                    className="inline-flex items-center justify-center gap-2 bg-white text-[#7c2d12]
+                               font-bold px-6 py-3 rounded-2xl transition-colors text-sm hover:bg-orange-50">
+                    💎 Silver — ₹199/mo
+                  </Link>
+                  <Link href="/premium?plan=gold"
+                    className="inline-flex items-center justify-center gap-2 bg-orange-500
+                               hover:bg-orange-400 text-white font-bold px-6 py-3 rounded-2xl
+                               transition-colors text-sm">
+                    <Crown className="w-4 h-4" /> Gold — ₹399/mo
+                  </Link>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
-    }>
-      <ProfilesContent />
-    </Suspense>
+
+      {/* Floating upgrade bar for free users */}
+      {isLimited && !loading && profiles.length > 0 && (
+        <UpgradeBar
+          message={`${filtered.length - Math.min(filtered.length, 6)} profiles hidden · Upgrade to Silver to see all`}
+        />
+      )}
+
+      <Footer />
+    </div>
   )
 }

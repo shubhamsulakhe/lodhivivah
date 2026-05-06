@@ -39,32 +39,35 @@ export default function NotificationBell() {
   }, [])
 
   async function loadProfile() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    // Use getSession() instead of getUser() to avoid auth lock conflicts
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return
+
+    const user = session.user
+
     const { data: profile } = await supabase
       .from('profiles').select('id').eq('user_id', user.id).single()
     if (!profile) return
+
     setProfileId(profile.id)
     loadNotifications(profile.id)
 
-const channel = supabase.channel(`notif-${profile.id}-${Date.now()}`)
+    const channel = supabase.channel(`notif-${profile.id}-${Date.now()}`)
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${profile.id}`,
+      },
+      payload => {
+        setNotifications(prev => [payload.new as Notification, ...prev])
+      }
+    ).subscribe()
 
-channel.on(
-  'postgres_changes',
-  {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'notifications',
-    filter: `user_id=eq.${profile.id}`,
-  },
-  payload => {
-    setNotifications(prev => [payload.new as Notification, ...prev])
+    return () => { supabase.removeChannel(channel) }
   }
-).subscribe()
-
-return () => { supabase.removeChannel(channel)
-}
- }
 
   async function loadNotifications(pid: string) {
     const { data } = await supabase
@@ -125,6 +128,7 @@ return () => { supabase.removeChannel(channel)
 
   return (
     <div className="relative" ref={ref}>
+      {/* Bell button */}
       <button
         onClick={() => setOpen(p => !p)}
         className="relative w-9 h-9 rounded-full flex items-center justify-center
@@ -138,70 +142,84 @@ return () => { supabase.removeChannel(channel)
         )}
       </button>
 
+      {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl border
-                        border-stone-200 shadow-xl z-50 overflow-hidden">
+        <>
+          {/* Mobile backdrop */}
+          <div className="fixed inset-0 z-40 sm:hidden bg-black/20"
+            onClick={() => setOpen(false)}/>
 
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-stone-900 text-sm">Notifications</h3>
-              {unread > 0 && (
-                <span className="bg-orange-100 text-orange-600 text-xs font-bold
-                                 px-2 py-0.5 rounded-full">{unread}</span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {unread > 0 && (
-                <button onClick={markAllRead}
-                  className="text-xs text-orange-500 hover:text-orange-600 font-medium">
-                  Mark all read
-                </button>
-              )}
-              <button onClick={() => setOpen(false)}
-                className="w-6 h-6 rounded-full hover:bg-stone-100 flex items-center justify-center">
-                <X className="w-3.5 h-3.5 text-stone-500"/>
-              </button>
-            </div>
-          </div>
+          {/* Panel */}
+          <div className="fixed left-3 right-3 top-16 z-50
+                          sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-80
+                          bg-white border border-stone-200 rounded-2xl shadow-xl overflow-hidden"
+            style={{ maxHeight:'70vh' }}>
 
-          {/* List */}
-          <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="text-center py-10">
-                <Bell className="w-8 h-8 text-stone-200 mx-auto mb-2"/>
-                <p className="text-stone-400 text-sm">No notifications yet</p>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3
+                            border-b border-stone-100 bg-white sticky top-0 z-10">
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-stone-900 text-sm">Notifications</h3>
+                {unread > 0 && (
+                  <span className="bg-orange-100 text-orange-600 text-xs font-bold
+                                   px-2 py-0.5 rounded-full">{unread}</span>
+                )}
               </div>
-            ) : (
-              notifications.map(n => (
-                <Link
-                  key={n.id}
-                  href={n.link || '#'}
-                  onClick={() => { markRead(n.id); setOpen(false) }}
-                  className={`flex items-start gap-3 px-4 py-3 hover:bg-stone-50
-                              transition-colors border-b border-stone-50 last:border-0
-                              ${!n.read ? 'bg-orange-50/50' : ''}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center
-                                   flex-shrink-0 mt-0.5 ${getIconBg(n.type)}`}>
-                    {getIcon(n.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${!n.read ? 'font-semibold text-stone-900' : 'text-stone-700'}`}>
-                      {n.title}
-                    </p>
-                    {n.body && (
-                      <p className="text-xs text-stone-400 mt-0.5 truncate">{n.body}</p>
+              <div className="flex items-center gap-2">
+                {unread > 0 && (
+                  <button onClick={markAllRead}
+                    className="text-xs text-orange-500 hover:text-orange-600 font-medium">
+                    Mark all read
+                  </button>
+                )}
+                <button onClick={() => setOpen(false)}
+                  className="w-6 h-6 rounded-full hover:bg-stone-100
+                             flex items-center justify-center">
+                  <X className="w-3.5 h-3.5 text-stone-500"/>
+                </button>
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="overflow-y-auto" style={{ maxHeight:'calc(70vh - 52px)' }}>
+              {notifications.length === 0 ? (
+                <div className="text-center py-10">
+                  <Bell className="w-8 h-8 text-stone-200 mx-auto mb-2"/>
+                  <p className="text-stone-400 text-sm">No notifications yet</p>
+                  <p className="text-stone-300 text-xs mt-1">अभी कोई notification नहीं</p>
+                </div>
+              ) : (
+                notifications.map(n => (
+                  <Link
+                    key={n.id}
+                    href={n.link || '#'}
+                    onClick={() => { markRead(n.id); setOpen(false) }}
+                    className={`flex items-start gap-3 px-4 py-3 hover:bg-stone-50
+                                transition-colors border-b border-stone-50 last:border-0
+                                ${!n.read ? 'bg-orange-50/50' : ''}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center
+                                     flex-shrink-0 mt-0.5 ${getIconBg(n.type)}`}>
+                      {getIcon(n.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm leading-snug
+                        ${!n.read ? 'font-semibold text-stone-900' : 'text-stone-700'}`}>
+                        {n.title}
+                      </p>
+                      {n.body && (
+                        <p className="text-xs text-stone-400 mt-0.5 truncate">{n.body}</p>
+                      )}
+                      <p className="text-xs text-stone-300 mt-1">{formatTime(n.created_at)}</p>
+                    </div>
+                    {!n.read && (
+                      <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0 mt-2"/>
                     )}
-                    <p className="text-xs text-stone-400 mt-1">{formatTime(n.created_at)}</p>
-                  </div>
-                  {!n.read && (
-                    <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0 mt-2"/>
-                  )}
-                </Link>
-              ))
-            )}
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )

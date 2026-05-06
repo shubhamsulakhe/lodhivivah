@@ -1,341 +1,533 @@
+'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase/client'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import {
-  Heart, Shield, Search, Users, Crown, Star, CheckCircle,
-  ArrowRight, Sparkles, Lock, HeartHandshake, Zap, Phone,
+  Heart, MessageCircle, Phone, Shield, Star,
+  ChevronRight, Check, Users, Sparkles, ArrowRight, Crown
 } from 'lucide-react'
 
+const COMMUNITIES = [
+  { name: 'Lodhi Kshatriya', hindi: 'लोधी क्षत्रिय',  count: '50+',  active: true  },
+  { name: 'Yadav Samaj',     hindi: 'यादव समाज',      count: 'जल्द', active: false },
+  { name: 'Kurmi Samaj',     hindi: 'कुर्मी समाज',    count: 'जल्द', active: false },
+  { name: 'Kirar Samaj',     hindi: 'किरार समाज',     count: 'जल्द', active: false },
+  { name: 'Teli Samaj',      hindi: 'तेली समाज',      count: 'जल्द', active: false },
+  { name: 'Rajput Samaj',    hindi: 'राजपूत समाज',    count: 'जल्द', active: false },
+  { name: 'Brahmin Samaj',   hindi: 'ब्राह्मण समाज',  count: 'जल्द', active: false },
+  { name: 'Kshatriya Samaj', hindi: 'क्षत्रिय समाज',  count: 'जल्द', active: false },
+]
+
+const STEPS = [
+  { icon:'📝', step:'01', title:'Register Free',      hindi:'मुफ्त रजिस्टर करें', desc:'Create profile in 5 minutes. Pick your community. Our team verifies within 24 hours.' },
+  { icon:'🔍', step:'02', title:'Browse & Connect',   hindi:'देखें और जुड़ें',      desc:'Browse verified profiles from your community. Send interest. Chat opens on acceptance.' },
+  { icon:'💑', step:'03', title:'Find Your Forever',  hindi:'जीवनसाथी खोजें',     desc:'Chat privately, voice call, share contacts. Everything at your pace, your comfort.' },
+]
+
+const FEATURES = [
+  { icon:Shield,        title:'Human Verified',   hindi:'100% सत्यापित',  desc:'Every profile manually reviewed. Zero fake profiles.',            bg:'bg-emerald-50', ic:'text-emerald-600' },
+  { icon:MessageCircle, title:'Free Live Chat',    hindi:'मुफ्त लाइव चैट', desc:'Chat opens instantly when interest accepted. No extra payment.',  bg:'bg-orange-50',  ic:'text-orange-600'  },
+  { icon:Phone,         title:'Voice Calls',       hindi:'वॉइस कॉल',       desc:'Call your match directly. Gold plan feature.',                    bg:'bg-blue-50',    ic:'text-blue-600'    },
+  { icon:Users,         title:'All Communities',   hindi:'सभी समाज',        desc:'20+ communities — one trusted platform for all of India.',       bg:'bg-purple-50',  ic:'text-purple-600'  },
+  { icon:Star,          title:'Free Forever',      hindi:'हमेशा मुफ्त',    desc:'Register, browse, send interest — completely free.',              bg:'bg-yellow-50',  ic:'text-yellow-600'  },
+  { icon:Heart,         title:'Gotra Matching',    hindi:'गोत्र मिलान',    desc:'Built-in gotra filters respect your traditions.',                 bg:'bg-pink-50',    ic:'text-pink-600'    },
+]
+
+const DEMO_PROFILES = [
+  { initial:'P', name:'Priya S.',  age:24, city:'Bhopal',   occ:'Teacher',  color:'from-pink-100 to-pink-50',     tc:'text-pink-700'    },
+  { initial:'R', name:'Rahul L.',  age:27, city:'Jabalpur', occ:'Engineer', color:'from-blue-100 to-blue-50',     tc:'text-blue-700'    },
+  { initial:'A', name:'Anita K.',  age:23, city:'Rewa',     occ:'Doctor',   color:'from-violet-100 to-violet-50', tc:'text-violet-700'  },
+  { initial:'V', name:'Vikram Y.', age:29, city:'Indore',   occ:'Business', color:'from-amber-100 to-amber-50',   tc:'text-amber-700'   },
+  { initial:'S', name:'Sunita P.', age:25, city:'Nagpur',   occ:'Nurse',    color:'from-rose-100 to-rose-50',     tc:'text-rose-700'    },
+  { initial:'M', name:'Manish T.', age:28, city:'Satna',    occ:'Govt Job', color:'from-teal-100 to-teal-50',     tc:'text-teal-700'    },
+]
+
 export default function HomePage() {
+  const [count, setCount]             = useState(50)
+  const [activeCom, setActiveCom]     = useState(0)
+  const [chatOpen, setChatOpen]       = useState(false)
+  const [chatMsg, setChatMsg]         = useState('')
+  const [chatHistory, setChatHistory] = useState([
+    { from:'bot', text:'नमस्ते! 🙏 मैं Wedly Assistant हूँ। Register करने में, plans जानने में या किसी भी सवाल में मदद कर सकता हूँ।' }
+  ])
+  const chatEndRef = useState<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    supabase.from('profiles')
+      .select('id', { count:'exact', head:true })
+      .eq('status','approved')
+      .then(({ count:c }) => { if (c && c > 0) setCount(c) })
+  }, [])
+
+  const botReplies: Record<string,string> = {
+    register:  'रजिस्ट्रेशन बिल्कुल मुफ्त है! ऊपर "मुफ्त रजिस्टर करें" पर click करें। 5 मिनट में profile बनाएं। 24 घंटे में हमारी team verify करेगी। 😊',
+    plan:      'Free: profile देखें + interest भेजें। Silver ₹199/month: unlimited contacts। Gold ₹399/month: voice calls + premium features। सब free से शुरू होता है! ✨',
+    free:      'हाँ! Register, browse, interest — सब मुफ्त। Contact details के लिए Silver लें। Fake profile नहीं, सब verified है। 🆓',
+    community: 'अभी Lodhi Kshatriya available है। जल्द Yadav, Kurmi, Kirar, Teli, Rajput, Brahmin भी आएंगे। आपकी community add करवाने के लिए contact करें! 🏘️',
+    safe:      'हर profile हमारी team manually verify करती है। Ladies का number तब तक hide रहता है जब तक वो share न करें। 100% safe! 🔒',
+  }
+
+  function sendChat() {
+    const text = chatMsg.trim()
+    if (!text) return
+    setChatHistory(p => [...p, { from:'user', text }])
+    setChatMsg('')
+    const lower = text.toLowerCase()
+    let reply = 'आपका सवाल हमें मिल गया! अधिक जानकारी के लिए wedly.co.in पर जाएं। 🙏'
+    if (lower.includes('register') || lower.includes('रजिस्टर')) reply = botReplies.register
+    else if (lower.includes('plan') || lower.includes('price') || lower.includes('cost') || lower.includes('₹')) reply = botReplies.plan
+    else if (lower.includes('free') || lower.includes('मुफ्त')) reply = botReplies.free
+    else if (lower.includes('community') || lower.includes('samaj') || lower.includes('समाज') || lower.includes('caste')) reply = botReplies.community
+    else if (lower.includes('safe') || lower.includes('fake') || lower.includes('secure') || lower.includes('verified')) reply = botReplies.safe
+    setTimeout(() => setChatHistory(p => [...p, { from:'bot', text: reply }]), 700)
+  }
+
   return (
-    <>
+    <div className="min-h-screen bg-[#fffaf6] overflow-x-hidden">
       <Navbar />
 
-      {/* ════════════════════════════════════════════
-          HERO – Full viewport with animated bg
-      ════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, #431407 0%, #7c2d12 20%, #c2410c 45%, #ea580c 65%, #f97316 80%, #fbbf24 100%)',
-        }} />
-
-        {/* Decorative SVG pattern */}
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fff' fill-opacity='1'%3E%3Cpath d='M30 0l8.66 15H21.34L30 0zm0 60l-8.66-15h17.32L30 60zM0 30l15-8.66V38.66L0 30zm60 0l-15 8.66V21.34L60 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
-
-        {/* Floating orbs */}
-        <div className="absolute top-1/4 right-1/4 w-72 h-72 rounded-full animate-pulse2"
-          style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.15) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 rounded-full animate-float"
-          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)' }} />
-
-        {/* Mandala ring top-right decoration */}
-        <div className="absolute -top-20 -right-20 w-[500px] h-[500px] opacity-5 animate-spin-slow">
-          <svg viewBox="0 0 200 200" fill="white">
-            <circle cx="100" cy="100" r="98" fill="none" stroke="white" strokeWidth="1" />
-            <circle cx="100" cy="100" r="80" fill="none" stroke="white" strokeWidth="0.5" />
-            <circle cx="100" cy="100" r="60" fill="none" stroke="white" strokeWidth="0.5" />
-            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(deg => (
-              <line key={deg}
-                x1={100 + 60 * Math.cos(deg * Math.PI / 180)}
-                y1={100 + 60 * Math.sin(deg * Math.PI / 180)}
-                x2={100 + 98 * Math.cos(deg * Math.PI / 180)}
-                y2={100 + 98 * Math.sin(deg * Math.PI / 180)}
-                stroke="white" strokeWidth="0.5" />
-            ))}
-          </svg>
+      {/* ── HERO ── */}
+      <section className="relative min-h-[100svh] flex flex-col justify-center pt-20 pb-12 px-4 sm:px-8 overflow-hidden">
+        {/* BG layers */}
+        <div className="absolute inset-0 pointer-events-none select-none">
+          <div className="absolute top-0 right-0 w-64 h-64 sm:w-[480px] sm:h-[480px] rounded-full opacity-25"
+            style={{ background:'radial-gradient(circle,#f97316 0%,transparent 70%)', transform:'translate(35%,-35%)' }}/>
+          <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-80 sm:h-80 rounded-full opacity-20"
+            style={{ background:'radial-gradient(circle,#ea580c 0%,transparent 70%)', transform:'translate(-35%,35%)' }}/>
+          <div className="absolute inset-0 opacity-20"
+            style={{ backgroundImage:'radial-gradient(circle,rgba(194,65,12,0.3) 1px,transparent 1px)', backgroundSize:'30px 30px' }}/>
+          {/* Ghost text — visible on all screens */}
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                           text-[22vw] sm:text-[18vw] font-black text-orange-100
+                           select-none whitespace-nowrap leading-none pointer-events-none
+                           opacity-70 z-0"
+            aria-hidden="true"
+            style={{ fontFamily:'Georgia,serif', letterSpacing:'-4px' }}>
+            Wedly
+          </span>
         </div>
 
-        <div className="relative container pt-28 pb-16">
-          <div className="max-w-4xl mx-auto text-center">
+        <div className="relative z-10 max-w-6xl mx-auto w-full">
+          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
 
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 glass rounded-full px-5 py-2.5 mb-8 animate-fade-up-1">
-              <Sparkles className="w-4 h-4 text-gold-300" />
-              <span className="text-white/90 text-sm font-medium">
-                अपनों के साथ, सही जीवनसाथी की तलाश।
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[1.25] mb-6 animate-fade-up-2">
-              अपना <span className="relative inline-block">
-                <span className="text-gold-300">जीवनसाथी</span>
-                <svg className="absolute -bottom-0 left-0 w-full" viewBox="0 0 200 10" preserveAspectRatio="none">
-                  <path d="M0 5 Q50 0 100 5 Q150 10 200 5" stroke="#fbbf24" strokeWidth="3" fill="none" strokeLinecap="round" />
-                </svg>
-              </span>
-              <br />
-              <span className="inline-block mt-5 text-white/95">खोजें — आज ही</span>
-            </h1>
-
-            <p className="text-white/80 text-xl sm:text-2xl font-light leading-relaxed mb-10 max-w-2xl mx-auto animate-fade-up-3">
-              लोधी समाज का सबसे बड़ा और भरोसेमंद डिजिटल विवाह मंच।
-              पुरानी पत्रिका का आधुनिक रूप।
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-14 animate-fade-up-4">
-              <Link href="/login"
-                className="btn btn-white btn-xl group">
-                <Heart className="w-5 h-5 text-saffron-500 fill-saffron-400 group-hover:scale-110 transition-transform" />
-              Register Free <span className="hidden sm:inline">— अभी जुड़ें</span>
-                <ArrowRight className="w-5 h-5 text-saffron-500 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link href="/profiles"
-                className="btn btn-xl glass text-white border border-white/30 hover:bg-white/20">
-                <Search className="w-5 h-5" />
-                Profiles Browse करें
-              </Link>
-            </div>
-
-            {/* Stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto animate-fade-up-4">
-              {[
-                { val: '2000+', lbl: 'Profiles' },
-                { val: '500+', lbl: 'Marriages' },
-                { val: '20+', lbl: 'Years' },
-                { val: '50+', lbl: 'Cities' },
-              ].map(({ val, lbl }) => (
-                <div key={lbl} className="glass rounded-2xl px-4 py-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black text-gold-300">{val}</div>
-                  <div className="text-white/70 text-sm font-medium">{lbl}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Wave */}
-        <div className="absolute bottom-0 inset-x-0">
-          <svg viewBox="0 0 1440 80" fill="none" preserveAspectRatio="none" className="w-full h-16 sm:h-20">
-            <path d="M0 80L48 66.7C96 53 192 27 288 20C384 13 480 27 576 36.7C672 47 768 53 864 50C960 47 1056 33 1152 26.7C1248 20 1344 20 1392 20H1440V80H0Z" fill="#fffbf5" />
-          </svg>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════
-          QUICK SEARCH BAR
-      ════════════════════════════════════════════ */}
-      <section className="py-10 pattern-bg">
-        <div className="container">
-          <div className="max-w-3xl mx-auto">
-            <div className="card p-6 shadow-xl">
-              <p className="text-center text-stone-600 font-semibold mb-5 text-lg">
-                🔍 Quick Search — अभी खोजें
-              </p>
-              <form className="grid grid-cols-1 sm:grid-cols-4 gap-3" action="/profiles" method="get">
-                <select name="gender" className="select sm:col-span-1">
-                  <option value="">Looking for</option>
-                  <option value="female">♀ Bride (वधू)</option>
-                  <option value="male">♂ Groom (वर)</option>
-                </select>
-                <select name="age" className="select">
-                  <option value="">Age Range</option>
-                  <option value="18-25">18–25 years</option>
-                  <option value="25-30">25–30 years</option>
-                  <option value="30-35">30–35 years</option>
-                  <option value="35+">35+ years</option>
-                </select>
-                <select name="state" className="select">
-                  <option value="">State</option>
-                  <option value="Madhya Pradesh">Madhya Pradesh</option>
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Chhattisgarh">Chhattisgarh</option>
-                  <option value="Other">Other</option>
-                </select>
-                <button type="submit" className="btn btn-primary btn-md justify-center">
-                  <Search className="w-4 h-4" /> Search
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════
-          HOW IT WORKS
-      ════════════════════════════════════════════ */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="text-center mb-14">
-            <p className="section-tag">Simple Process</p>
-            <h2 className="section-title">कैसे काम करता है?</h2>
-            <p className="section-sub">बस 4 आसान steps में पाएं अपना जीवनसाथी</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            {/* Connector line desktop */}
-            <div className="hidden lg:block absolute top-16 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-saffron-200 via-saffron-400 to-saffron-200 z-0" />
-
-            {[
-              { step: '01', emoji: '📝', title: 'Register Free', desc: 'Profile बनाएं, photo upload करें। बिल्कुल मुफ्त।', color: 'from-orange-400 to-orange-600' },
-              { step: '02', emoji: '✅', title: 'Get Approved', desc: 'Admin 24 hrs में verify करेगा। SMS notification मिलेगी।', color: 'from-blue-400 to-blue-600' },
-              { step: '03', emoji: '🔍', title: 'Browse & Match', desc: 'Filters से profiles देखें। Interest भेजें।', color: 'from-purple-400 to-purple-600' },
-              { step: '04', emoji: '💑', title: 'Connect!', desc: 'Match होने पर contact share होगी। परिवार मिलेंगे।', color: 'from-pink-400 to-rose-600' },
-            ].map(({ step, emoji, title, desc, color }) => (
-              <div key={step} className="relative z-10 flex flex-col items-center text-center group">
-                <div className={cn(
-                  `w-14 h-14 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center`,
-                  'text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300 mb-4'
-                )}>
-                  {emoji}
-                </div>
-                <span className="text-xs font-bold text-saffron-400 tracking-widest mb-1">STEP {step}</span>
-                <h3 className="font-bold text-stone-900 text-lg mb-2">{title}</h3>
-                <p className="text-stone-500 text-sm leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link href="/login" className="btn btn-primary btn-lg">
-              <Heart className="w-5 h-5" /> अभी शुरू करें — Register Free
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════
-          FEATURES SECTION
-      ════════════════════════════════════════════ */}
-      <section className="section pattern-bg">
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Left text */}
-            <div>
-              <p className="section-tag">Why LodhiVivah?</p>
-              <h2 className="section-title">क्यों चुनें हमारा Platform?</h2>
-              <p className="section-sub text-base">20 वर्षों की परंपरा, अब Digital</p>
-              <div className="mt-8 space-y-5">
+            <div className="flex-1 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200
+                              px-4 py-2 rounded-full mb-6">
+                <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"/>
+                <span className="text-xs font-semibold text-orange-700 tracking-wide">
+                  {count}+ Verified Profiles Live
+                </span>
+              </div>
+
+              <h1 className="text-[40px] sm:text-[58px] lg:text-[70px] font-black leading-[0.93]
+                             text-[#431407] mb-3 tracking-tight"
+                style={{ fontFamily:'Georgia,serif' }}>
+                अपना<br/>
+                <em className="text-orange-600 not-italic" style={{ fontStyle:'italic', fontWeight:300 }}>
+                  जीवनसाथी
+                </em><br/>
+                खोजें।
+              </h1>
+              <p className="text-base text-orange-700/70 mb-1"
+                style={{ fontFamily:'Georgia,serif', fontStyle:'italic' }}>
+                Find Your Forever.
+              </p>
+
+              <p className="text-sm sm:text-base text-stone-500 leading-relaxed
+                            max-w-sm mx-auto lg:mx-0 mb-8 mt-4">
+                India's most trusted community matrimony platform. Verified profiles, live chat, voice calls —
+                <strong className="text-orange-700"> completely free</strong> to join.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center
+                              justify-center lg:justify-start gap-3 mb-10">
+                <Link href="/onboard"
+                  className="flex items-center justify-center gap-2 bg-[#c2410c]
+                             hover:bg-[#9a3412] text-white font-bold text-base
+                             px-8 py-4 rounded-2xl transition-all shadow-lg
+                             shadow-orange-200 hover:-translate-y-0.5 active:translate-y-0">
+                  मुफ्त रजिस्टर करें
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/profiles"
+                  className="flex items-center justify-center gap-2 bg-white
+                             border border-orange-200 text-orange-700 font-semibold
+                             text-base px-8 py-4 rounded-2xl transition-all
+                             hover:bg-orange-50 hover:-translate-y-0.5">
+                  Profiles देखें
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              <div className="flex items-center justify-center lg:justify-start gap-5 sm:gap-8">
                 {[
-                  { icon: Shield, color: 'bg-blue-100 text-blue-600', title: 'Verified Profiles Only', desc: 'हर profile manually verify होती है। Fake profiles के लिए कोई जगह नहीं।' },
-                  { icon: Lock, color: 'bg-purple-100 text-purple-600', title: 'Privacy Protected', desc: 'Contact details सिर्फ Premium members को दिखती हैं। आपकी privacy secure है।' },
-                  { icon: HeartHandshake, color: 'bg-rose-100 text-rose-600', title: '500+ Successful Matches', desc: 'हमारे platform से अब तक 500 से ज्यादा शादियाँ हो चुकी हैं।' },
-                  { icon: Zap, color: 'bg-amber-100 text-amber-600', title: 'Instant WhatsApp Connect', desc: 'Match होने पर directly WhatsApp पर connect करें।' },
-                ].map(({ icon: Icon, color, title, desc }) => (
-                  <div key={title} className="flex gap-4">
-                    <div className={`w-11 h-11 rounded-2xl ${color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-stone-900">{title}</h4>
-                      <p className="text-stone-500 text-sm mt-0.5">{desc}</p>
-                    </div>
+                  { v:`${count}+`, l:'Profiles' },
+                  { v:'03+',       l:'States'   },
+                  { v:'₹0',        l:'Register' },
+                  { v:'Live',      l:'Chat'     },
+                ].map(s => (
+                  <div key={s.l} className="text-center">
+                    <div className="text-xl sm:text-2xl font-black text-[#7c2d12]"
+                      style={{ fontFamily:'Georgia,serif' }}>{s.v}</div>
+                    <div className="text-[10px] text-stone-400 uppercase tracking-widest font-medium">{s.l}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right - decorative card stack */}
-            <div className="relative h-[500px] hidden lg:block">
-              {/* Background card */}
-              <div className="absolute top-8 right-8 w-72 h-96 card bg-saffron-50 rotate-3" />
-              {/* Main card */}
-              <div className="absolute top-0 right-0 w-72 h-96 card overflow-hidden -rotate-1 shadow-xl">
-                <div className="h-52 bg-gradient-to-br from-pink-200 to-rose-300 flex items-center justify-center text-7xl">
-                  👩
+            {/* Right — blurred profile grid */}
+            <div className="w-full max-w-[340px] lg:max-w-[420px] flex-shrink-0">
+              <div className="relative">
+                <div className="grid grid-cols-3 gap-2.5">
+                  {DEMO_PROFILES.map((p, i) => (
+                    <div key={i}
+                      className={`bg-gradient-to-b ${p.color} rounded-2xl overflow-hidden
+                                  border border-white/80 shadow-md
+                                  hover:scale-105 hover:shadow-xl transition-all duration-300`}>
+                      <div className="relative h-[72px] flex items-center justify-center">
+                        <div className={`w-10 h-10 rounded-full bg-white/60 flex items-center
+                                        justify-center text-xl font-black ${p.tc}`}>{p.initial}</div>
+                        <div className="absolute inset-0 backdrop-blur-[6px] bg-white/25
+                                        flex items-center justify-center">
+                          <div className="bg-white/80 rounded-full p-1">
+                            <Shield className="w-3 h-3 text-orange-600"/>
+                          </div>
+                        </div>
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-emerald-500
+                                        rounded-full flex items-center justify-center shadow-sm">
+                          <Check className="w-2.5 h-2.5 text-white"/>
+                        </div>
+                      </div>
+                      <div className="px-2 py-2 bg-white/60">
+                        <div className="text-[11px] font-bold text-stone-800 truncate">{p.name}</div>
+                        <div className="text-[9px] text-stone-500">{p.age}y · {p.city}</div>
+                        <span className="text-[9px] bg-orange-100 text-orange-700
+                                         px-1.5 py-0.5 rounded-full font-medium inline-block mt-1">
+                          {p.occ}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="p-4">
-                  <p className="font-bold text-stone-900 text-lg">Priya Sharma</p>
-                  <p className="text-stone-500 text-sm">24 yrs • B.Sc. • Balaghat, MP</p>
-                  <div className="flex gap-2 mt-3">
-                    <span className="badge-verified"><CheckCircle className="w-3 h-3" /> Verified</span>
-                    <span className="text-xs bg-saffron-50 text-saffron-700 px-2 py-1 rounded-full font-medium">गोत्र: Kashyap</span>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <div className="flex-1 bg-saffron-500 text-white text-xs font-bold py-2 rounded-xl text-center">Interest भेजें ♥</div>
-                    <div className="flex-1 bg-saffron-50 text-saffron-700 text-xs font-bold py-2 rounded-xl text-center">Profile देखें</div>
-                  </div>
+                {/* CTA overlay */}
+                <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t
+                                from-[#fffaf6] via-[#fffaf6]/80 to-transparent
+                                flex items-end justify-center pb-3 rounded-b-2xl">
+                  <Link href="/onboard"
+                    className="bg-[#c2410c] text-white text-xs font-bold px-5 py-2.5
+                               rounded-xl shadow-lg hover:bg-[#9a3412] transition-colors
+                               flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5"/>
+                    Login to see full profiles
+                  </Link>
                 </div>
-              </div>
-              {/* Floating badge */}
-              <div className="absolute -bottom-4 left-8 card px-5 py-4 shadow-xl animate-float">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-stone-900 text-sm">Match हो गया! 🎉</p>
-                    <p className="text-stone-400 text-xs">Contact share हो गई</p>
-                  </div>
-                </div>
-              </div>
-              {/* Stars */}
-              <div className="absolute top-1/2 -left-4 card px-4 py-3 shadow-xl animate-pulse2">
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 text-gold-400 fill-gold-400" />)}
-                </div>
-                <p className="text-stone-600 text-xs mt-1 font-medium">500+ खुश जोड़ियाँ</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════
-          PRICING
-      ════════════════════════════════════════════ */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="text-center mb-14">
-            <p className="section-tag">Membership Plans</p>
-            <h2 className="section-title">सही Plan चुनें</h2>
-            <p className="section-sub">Free से शुरू करें — जब चाहें Upgrade करें</p>
+      {/* ── COMMUNITY SECTION ── */}
+      <section className="py-14 sm:py-20 bg-[#7c2d12] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.07]"
+          style={{ backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize:'22px 22px' }}/>
+        <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-15 pointer-events-none"
+          style={{ background:'radial-gradient(circle,#f97316 0%,transparent 70%)', transform:'translate(30%,-30%)' }}/>
+
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-8">
+          <div className="text-center mb-10">
+            <p className="text-orange-300 text-[11px] font-semibold tracking-[3px] uppercase mb-3">
+              हर समाज के लिए · For Every Community
+            </p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-3"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1px' }}>
+              आपका समाज,<br/>
+              <em className="text-orange-300" style={{ fontStyle:'italic', fontWeight:300 }}>आपका मंच।</em>
+            </h2>
+            <p className="text-orange-200/60 text-sm sm:text-base max-w-md mx-auto font-light">
+              One verified platform for all. Browse your community first.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {/* Pills — scrollable on mobile */}
+          <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3 mb-10">
+            {COMMUNITIES.map((c, i) => (
+              <button key={i} onClick={() => setActiveCom(i)}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl border
+                            text-[13px] font-medium transition-all duration-200
+                            ${activeCom === i
+                              ? 'bg-orange-500 border-orange-400 text-white shadow-lg'
+                              : 'bg-white/8 border-white/15 text-white/80 hover:bg-white/15'}`}>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0
+                  ${c.active ? 'bg-emerald-400' : 'bg-white/25'}
+                  ${activeCom === i && c.active ? 'animate-pulse' : ''}`}/>
+                <span>
+                  <span className="block text-[10px] opacity-60 leading-none mb-0.5">{c.hindi}</span>
+                  <span>{c.name}</span>
+                </span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold
+                  ${activeCom === i ? 'bg-white/25 text-white' : 'bg-white/10 text-white/50'}`}>
+                  {c.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 bg-white/8 border border-white/10
+                          rounded-2xl overflow-hidden">
             {[
-              {
-                name: 'Free', price: '₹0', period: 'हमेशा के लिए', popular: false,
-                icon: '🆓', color: 'border-stone-200',
-                features: ['Profile create करें', 'सभी profiles browse करें', '5 interests/month', 'Basic search filters'],
-                cta: 'Start Free', href: '/premium', primary: false,
-              },
-              {
-                name: 'Silver', price: '₹199', period: '1 महीना', popular: true,
-                icon: '⚡', color: 'border-saffron-400',
-                features: ['सब Free में +', 'Contact numbers देखें', 'Unlimited interests', 'Advanced filters', 'WhatsApp connect', 'Priority listing'],
-                cta: 'Get Silver', href: '/premium', primary: true,
-              },
-              {
-                name: 'Gold', price: '₹399', period: '3 महीने', popular: false,
-                icon: '👑', color: 'border-gold-400',
-                features: ['सब Silver में +', 'Featured profile badge', 'Top search placement', 'Digital booklet PDF', '1 year membership', 'Dedicated support'],
-                cta: 'Get Gold', href: '/premium', primary: false,
-              },
-            ].map(({ name, price, period, popular, icon, color, features, cta, href, primary }) => (
-              <div key={name} className={cn(
-                'card p-7 relative flex flex-col border-2',
-                color,
-                popular && 'scale-105 shadow-glow',
-              )}>
-                {popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-saffron-600 to-saffron-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">
-                      ✦ सबसे लोकप्रिय
-                    </span>
+              { v:`${count}+`, l:'Verified Profiles', h:'सत्यापित प्रोफाइल' },
+              { v:'03+',       l:'States Covered',    h:'राज्यों में'        },
+              { v:'₹0',        l:'To Register',       h:'रजिस्ट्रेशन मुफ्त' },
+              { v:'24h',       l:'Profile Review',    h:'प्रोफाइल जाँच'     },
+            ].map((s,i) => (
+              <div key={i} className="py-5 px-4 text-center border-b sm:border-b-0
+                                      border-r border-white/8 last:border-0
+                                      [&:nth-child(2)]:border-r-0 sm:[&:nth-child(2)]:border-r">
+                <div className="text-3xl font-black text-white"
+                  style={{ fontFamily:'Georgia,serif' }}>{s.v}</div>
+                <div className="text-orange-200/60 text-[10px] font-medium uppercase tracking-wide mt-0.5">{s.l}</div>
+                <div className="text-orange-300/40 text-[9px] mt-0.5">{s.h}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="py-14 sm:py-20 px-4 sm:px-8 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-orange-500 text-[11px] font-semibold tracking-[3px] uppercase mb-3">
+              Simple Process
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#431407] leading-tight"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1px' }}>
+              तीन आसान कदम।<br/>
+              <em className="text-orange-600" style={{ fontStyle:'italic', fontWeight:300 }}>Three simple steps.</em>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {STEPS.map((s, i) => (
+              <div key={i}
+                className="relative bg-[#fffaf6] rounded-3xl p-6 sm:p-8 border border-orange-100
+                           hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100
+                           transition-all duration-300 overflow-hidden">
+                <span className="absolute top-4 right-5 text-7xl font-black text-orange-100 select-none"
+                  aria-hidden="true" style={{ fontFamily:'Georgia,serif' }}>{s.step}</span>
+                <div className="text-4xl mb-4">{s.icon}</div>
+                <h3 className="text-lg font-bold text-[#431407] mb-0.5">{s.title}</h3>
+                <p className="text-xs text-orange-500 font-medium mb-3">{s.hindi}</p>
+                <p className="text-sm text-stone-500 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PROFILE PREVIEW ── */}
+      <section className="py-14 sm:py-20 px-4 sm:px-8 bg-[#fffaf6]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-orange-500 text-[11px] font-semibold tracking-[3px] uppercase mb-3">
+              Real Profiles · असली प्रोफाइल
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#431407] leading-tight"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1px' }}>
+              Verified matches<br/>
+              <em className="text-orange-600" style={{ fontStyle:'italic', fontWeight:300 }}>waiting for you.</em>
+            </h2>
+            <p className="text-stone-400 text-sm max-w-xs mx-auto mt-3">
+              Register free to see full profiles, photos and contact details.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {DEMO_PROFILES.map((p, i) => (
+              <div key={i}
+                className={`bg-gradient-to-b ${p.color} rounded-2xl overflow-hidden
+                            border border-white shadow-sm hover:shadow-md
+                            hover:-translate-y-1 transition-all duration-300`}>
+                <div className="relative h-20 flex items-center justify-center">
+                  <div className={`w-12 h-12 rounded-full bg-white/80 flex items-center
+                                  justify-center text-2xl font-black ${p.tc}`}>{p.initial}</div>
+                  <div className="absolute inset-0 backdrop-blur-[8px] bg-white/30
+                                  flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-1.5 shadow-sm">
+                      <Shield className="w-3.5 h-3.5 text-orange-600"/>
+                    </div>
+                  </div>
+                  <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-emerald-500
+                                  rounded-full flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-white"/>
+                  </div>
+                </div>
+                <div className="p-2 bg-white/70">
+                  <div className="text-[11px] font-bold text-stone-800 truncate">{p.name}</div>
+                  <div className="text-[9px] text-stone-400">{p.age}y · {p.city}</div>
+                  <span className="text-[9px] bg-orange-100 text-orange-700
+                                   px-1.5 py-0.5 rounded-full inline-block mt-1 font-medium">
+                    {p.occ}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-8">
+            <Link href="/onboard"
+              className="inline-flex items-center gap-2 bg-[#c2410c] text-white font-bold
+                         text-sm px-8 py-3.5 rounded-2xl hover:bg-[#9a3412] transition-colors
+                         shadow-lg shadow-orange-200">
+              <Sparkles className="w-4 h-4"/> सभी प्रोफाइल देखें — Register Free
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section className="py-14 sm:py-20 px-4 sm:px-8 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-orange-500 text-[11px] font-semibold tracking-[3px] uppercase mb-3">
+              Everything You Need
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#431407] leading-tight"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1px' }}>
+              Built for India.<br/>
+              <em className="text-orange-600" style={{ fontStyle:'italic', fontWeight:300 }}>Built for you.</em>
+            </h2>
+          </div>
+
+          {/* Big chat feature card */}
+          <div className="bg-[#7c2d12] rounded-3xl p-6 sm:p-10 mb-4 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.07]"
+              style={{ backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.4) 1px,transparent 1px)', backgroundSize:'20px 20px' }}/>
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-8">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 bg-orange-500/20 border
+                                border-orange-500/30 px-3 py-1.5 rounded-full mb-4">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/>
+                  <span className="text-orange-300 text-xs font-semibold tracking-wide">
+                    LIVE · अभी उपलब्ध
+                  </span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-white mb-2 leading-tight"
+                  style={{ fontFamily:'Georgia,serif' }}>
+                  Direct Chat &<br/>Voice Calls
+                </h3>
+                <p className="text-xs text-orange-300 font-medium mb-3">
+                  सीधी बात — बिना नंबर share किए
+                </p>
+                <p className="text-orange-200/60 text-sm leading-relaxed max-w-xs">
+                  Chat privately after interest accepted. Voice call on Gold plan. No middleman, no broker.
+                </p>
+              </div>
+              {/* Mini chat preview */}
+              <div className="w-full sm:w-60 flex-shrink-0">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden">
+                  <div className="bg-white/10 px-3 py-2.5 flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-orange-300 flex items-center
+                                    justify-center text-orange-900 font-bold text-xs">P</div>
+                    <div>
+                      <div className="text-white text-xs font-semibold">Priya</div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"/>
+                        <span className="text-emerald-400 text-[10px]">Online</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-2.5">
+                    <div className="bg-white/15 rounded-xl rounded-tl-sm px-3 py-2">
+                      <p className="text-white text-[11px]">Namaste! Profile bahut accha laga 🙏</p>
+                    </div>
+                    <div className="bg-orange-500 rounded-xl rounded-tr-sm px-3 py-2 ml-4">
+                      <p className="text-white text-[11px]">Namaste ji! Main Jabalpur se hoon 😊</p>
+                    </div>
+                    <div className="bg-white/15 rounded-xl rounded-tl-sm px-3 py-2">
+                      <p className="text-white text-[11px]">Call pe milte hain? 💑</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            {FEATURES.map((f, i) => (
+              <div key={i}
+                className="bg-[#fffaf6] rounded-2xl p-4 sm:p-5 border border-orange-100
+                           hover:border-orange-300 hover:shadow-md hover:shadow-orange-50
+                           transition-all duration-300">
+                <div className={`w-10 h-10 ${f.bg} rounded-xl flex items-center justify-center mb-3`}>
+                  <f.icon className={`w-5 h-5 ${f.ic}`}/>
+                </div>
+                <h4 className="text-sm font-bold text-[#431407] mb-0.5">{f.title}</h4>
+                <p className="text-[10px] text-orange-500 font-medium mb-2">{f.hindi}</p>
+                <p className="text-xs text-stone-400 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PLANS STRIP ── */}
+      <section className="py-14 sm:py-16 px-4 sm:px-8 bg-[#fffaf6] border-y border-orange-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-black text-[#431407]"
+              style={{ fontFamily:'Georgia,serif' }}>
+              शुरुआत मुफ्त — <em style={{ fontStyle:'italic', fontWeight:300 }}>Always.</em>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { name:'Free',   hindi:'मुफ्त',  price:'₹0',   period:'forever',  features:['Profile create','Browse all profiles','2 interests/day','Basic chat'], highlight:false },
+              { name:'Silver', hindi:'सिल्वर', price:'₹199', period:'/month',   features:['Everything in Free','Unlimited interests','View contacts','Priority listing'], highlight:true  },
+              { name:'Gold',   hindi:'गोल्ड',  price:'₹399', period:'/month',   features:['Everything in Silver','Voice calls 📞','See profile viewers','Gold badge ✦'], highlight:false },
+            ].map(plan => (
+              <div key={plan.name}
+                className={`rounded-2xl p-5 border transition-all
+                  ${plan.highlight
+                    ? 'bg-[#7c2d12] border-[#7c2d12] text-white'
+                    : 'bg-white border-orange-100'}`}>
+                {plan.highlight && (
+                  <div className="text-orange-300 text-[10px] font-bold uppercase tracking-widest mb-3">
+                    ✦ Most Popular
                   </div>
                 )}
-                <div className="text-3xl mb-3">{icon}</div>
-                <h3 className="font-black text-stone-900 text-2xl">{name}</h3>
-                <div className="mt-2 mb-1">
-                  <span className="text-4xl font-black text-saffron-600">{price}</span>
+                <div className={`text-xs font-semibold mb-1 ${plan.highlight ? 'text-orange-300' : 'text-orange-500'}`}>
+                  {plan.name} · {plan.hindi}
                 </div>
-                <p className="text-stone-400 text-sm mb-6">{period}</p>
-                <ul className="space-y-3 flex-1 mb-7">
-                  {features.map(f => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm text-stone-600">
-                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <div className={`font-black mb-4 ${plan.highlight ? 'text-white' : 'text-[#431407]'}`}
+                  style={{ fontFamily:'Georgia,serif' }}>
+                  <span className="text-3xl">{plan.price}</span>
+                  <span className={`text-sm font-normal ml-1 ${plan.highlight ? 'text-orange-200/60' : 'text-stone-400'}`}>
+                    {plan.period}
+                  </span>
+                </div>
+                <div className="space-y-2 mb-5">
+                  {plan.features.map(f => (
+                    <div key={f} className={`flex items-center gap-2 text-xs
+                      ${plan.highlight ? 'text-orange-100' : 'text-stone-500'}`}>
+                      <Check className={`w-3.5 h-3.5 flex-shrink-0
+                        ${plan.highlight ? 'text-emerald-400' : 'text-emerald-500'}`}/>
                       {f}
-                    </li>
+                    </div>
                   ))}
-                </ul>
-                <Link href={href}
-                  className={cn('btn btn-md w-full justify-center', primary ? 'btn-primary' : 'btn-outline')}>
-                  {cta} →
+                </div>
+                <Link href="/premium"
+                  className={`block text-center text-sm font-bold py-2.5 rounded-xl transition-all
+                    ${plan.highlight
+                      ? 'bg-orange-500 text-white hover:bg-orange-400'
+                      : plan.price === '₹0'
+                        ? 'bg-[#fffaf6] border border-orange-200 text-orange-700 hover:bg-orange-50'
+                        : 'bg-[#7c2d12] text-white hover:bg-[#9a3412]'}`}>
+                  {plan.price === '₹0' ? 'Get Started Free' : `Upgrade to ${plan.name}`}
                 </Link>
               </div>
             ))}
@@ -343,79 +535,133 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════
-          TESTIMONIALS
-      ════════════════════════════════════════════ */}
-      <section className="section pattern-bg">
-        <div className="container">
-          <div className="text-center mb-12">
-            <p className="section-tag">Success Stories</p>
-            <h2 className="section-title">खुशहाल जोड़ियाँ 💑</h2>
-            <p className="section-sub">हमारे platform से हुई सफल शादियाँ</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { names: 'Rahul & Priya', loc: 'Balaghat, MP', year: '2023', text: 'इस platform की वजह से हमारी मुलाकात हुई। परिवार बहुत खुश हैं। बहुत-बहुत धन्यवाद!', emoji: '💑' },
-              { names: 'Suresh & Kavita', loc: 'Jabalpur, MP', year: '2023', text: 'Profile देखकर पहली नजर में पसंद आ गई। 6 महीने में शादी हो गई। बेहतरीन platform है।', emoji: '🥂' },
-              { names: 'Deepak & Sunita', loc: 'Nagpur, MH', year: '2022', text: 'हम दोनों अलग-अलग शहरों में थे। इस website ने मिलाया। अब जीवन सुखमय है।', emoji: '❤️' },
-            ].map(({ names, loc, year, text, emoji }) => (
-              <div key={names} className="card p-6">
-                <div className="text-3xl mb-4">{emoji}</div>
-                <div className="flex mb-3">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 text-gold-400 fill-gold-400" />)}
-                </div>
-                <p className="text-stone-600 text-sm leading-relaxed italic mb-5">"{text}"</p>
-                <div className="flex items-center gap-3 pt-4 border-t border-stone-100">
-                  <div className="w-10 h-10 bg-saffron-100 rounded-xl flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-saffron-500 fill-saffron-200" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-stone-900 text-sm">{names}</p>
-                    <p className="text-stone-400 text-xs">{loc} • {year}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ── TRUST BAR ── */}
+      <section className="py-10 px-4 sm:px-8 bg-white border-b border-orange-100">
+        <div className="max-w-4xl mx-auto grid grid-cols-3 sm:grid-cols-5 gap-4 sm:gap-0 sm:divide-x divide-orange-100">
+          {[
+            { icon:'✅', v:'100%',  l:'Human Reviewed', h:'मानव सत्यापित' },
+            { icon:'💬', v:'Live',  l:'Real-time Chat', h:'लाइव चैट'       },
+            { icon:'🆓', v:'₹0',   l:'Free to Join',   h:'मुफ्त रजिस्टर'  },
+            { icon:'🏘️', v:'20+',  l:'Communities',    h:'समाज'            },
+            { icon:'📞', v:'24/7', l:'AI Support',      h:'सहायता'          },
+          ].map((t, i) => (
+            <div key={i} className="text-center px-3 py-2">
+              <div className="text-2xl mb-1">{t.icon}</div>
+              <div className="text-lg font-black text-[#7c2d12]"
+                style={{ fontFamily:'Georgia,serif' }}>{t.v}</div>
+              <div className="text-[10px] text-stone-400 font-medium uppercase tracking-wide">{t.l}</div>
+              <div className="text-[9px] text-orange-400">{t.h}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════
-          CTA BANNER
-      ════════════════════════════════════════════ */}
-      <section className="relative py-24 overflow-hidden" style={{
-        background: 'linear-gradient(135deg, #431407 0%, #7c2d12 25%, #c2410c 55%, #f97316 80%, #fbbf24 100%)',
-      }}>
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='1'%3E%3Cpath d='M30 0l8.66 15H21.34L30 0z'/%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
-        <div className="container relative text-center">
-          <div className="text-6xl mb-5 animate-float">💍</div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">
-            आज ही Registration करें!
+      {/* ── FINAL CTA ── */}
+      <section className="py-16 sm:py-24 px-4 sm:px-8 bg-[#431407] text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage:'radial-gradient(circle,rgba(249,115,22,0.5) 1px,transparent 1px)', backgroundSize:'28px 28px' }}/>
+        <div className="absolute inset-0"
+          style={{ background:'radial-gradient(ellipse 80% 60% at 50% 50%,rgba(234,88,12,0.15) 0%,transparent 70%)' }}/>
+        <div className="relative z-10 max-w-xl mx-auto">
+          <span className="text-orange-300/60 text-[11px] font-semibold tracking-[3px] uppercase block mb-4">
+            आज ही शुरू करें · Start Today
+          </span>
+          <h2 className="text-4xl sm:text-5xl font-black text-white leading-tight mb-4"
+            style={{ fontFamily:'Georgia,serif', letterSpacing:'-2px' }}>
+            आपका forever<br/>
+            <em className="text-orange-300" style={{ fontStyle:'italic', fontWeight:300 }}>यहाँ से शुरू होता है।</em>
           </h2>
-          <p className="text-white/80 text-xl mb-10 max-w-xl mx-auto">
-            अभी जुड़ें और अपना जीवनसाथी खोजें। Registration पूरी तरह मुफ्त है।
+          <p className="text-orange-200/40 text-sm font-light mb-8 max-w-xs mx-auto leading-relaxed">
+            Join verified families across India. 2 minutes to register. Free forever.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/login" className="btn btn-white btn-xl group">
-              <Heart className="w-5 h-5 text-saffron-500 fill-saffron-400" />
-              Register Now — Free
-              <ArrowRight className="w-5 h-5 text-saffron-500 group-hover:translate-x-1 transition-transform" />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/onboard"
+              className="w-full sm:w-auto flex items-center justify-center gap-2
+                         bg-white text-[#7c2d12] font-bold text-base px-10 py-4
+                         rounded-2xl hover:bg-orange-50 transition-all
+                         hover:-translate-y-0.5 shadow-xl">
+              मुफ्त प्रोफाइल बनाएं →
             </Link>
-            <a href="https://wa.me/918770607574" target="_blank" rel="noopener noreferrer"
-              className="btn btn-xl glass text-white border border-white/30 hover:bg-white/20">
-              <Phone className="w-5 h-5" /> WhatsApp करें
-            </a>
+            <Link href="/profiles"
+              className="text-orange-300/60 hover:text-orange-300 text-sm font-medium transition-colors py-4">
+              Browse profiles ↗
+            </Link>
           </div>
         </div>
       </section>
 
       <Footer />
-    </>
-  )
-}
 
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
+      {/* ── CHATBOT ── */}
+      <div className="fixed bottom-5 right-4 sm:right-6 z-50">
+        {chatOpen && (
+          <div className="absolute bottom-16 right-0 w-[290px] sm:w-[320px] bg-white rounded-3xl
+                          shadow-2xl border border-orange-100 overflow-hidden">
+            <div className="bg-[#7c2d12] px-4 py-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-base">🤖</div>
+              <div className="flex-1">
+                <div className="text-white text-sm font-semibold">Wedly Assistant</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"/>
+                  <span className="text-orange-200/60 text-[10px]">हमेशा उपलब्ध · Always online</span>
+                </div>
+              </div>
+              <button onClick={() => setChatOpen(false)}
+                className="text-white/50 hover:text-white text-lg">✕</button>
+            </div>
+
+            <div className="h-48 overflow-y-auto p-3.5 space-y-2.5 bg-[#fffaf6]">
+              {chatHistory.map((m, i) => (
+                <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[88%] px-3 py-2 rounded-2xl text-xs leading-relaxed
+                    ${m.from === 'bot'
+                      ? 'bg-white border border-orange-100 text-stone-700 rounded-tl-sm'
+                      : 'bg-orange-600 text-white rounded-tr-sm'}`}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="px-3 py-2 flex flex-wrap gap-1.5 border-t border-orange-100 bg-white">
+              {['Register कैसे?','Plans?','Free है?','Samaj?'].map(q => (
+                <button key={q}
+                  onClick={() => { setChatMsg(q); setTimeout(sendChat, 50) }}
+                  className="text-[10px] bg-orange-50 border border-orange-200 text-orange-700
+                             px-2 py-1 rounded-full hover:bg-orange-100 transition-colors font-medium">
+                  {q}
+                </button>
+              ))}
+            </div>
+
+            <div className="px-3 pb-3 flex gap-2 bg-white">
+              <input value={chatMsg} onChange={e => setChatMsg(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && sendChat()}
+                placeholder="अपना सवाल लिखें…"
+                className="flex-1 bg-stone-100 border border-stone-200 rounded-xl
+                           px-3 py-2 text-xs text-stone-700 outline-none
+                           focus:border-orange-300 focus:bg-white transition-all"/>
+              <button onClick={sendChat}
+                className="w-8 h-8 bg-orange-600 rounded-xl flex items-center justify-center
+                           hover:bg-orange-700 transition-colors flex-shrink-0">
+                <ArrowRight className="w-3.5 h-3.5 text-white"/>
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button onClick={() => setChatOpen(p => !p)}
+          className="w-14 h-14 bg-[#c2410c] hover:bg-[#9a3412] text-white rounded-full
+                     shadow-xl shadow-orange-300/30 flex items-center justify-center
+                     transition-all duration-200 hover:scale-110 active:scale-95 relative">
+          <MessageCircle className="w-6 h-6"/>
+          {!chatOpen && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full
+                             flex items-center justify-center text-[8px] font-bold text-white
+                             border border-white">!</span>
+          )}
+        </button>
+      </div>
+    </div>
+  )
 }

@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import IncomingCallBanner from '@/components/IncomingCallBanner'
+
+
 
 export const metadata: Metadata = {
-  title: { default: 'Wedly — लोधी समाज विवाह', template: '%s | Wedly' },
-  description: 'Lodhi Samaj का विश्वसनीय विवाह पोर्टल।',
+  title: { default: 'Wedly — Find Your Forever', template: '%s | Wedly' },
+  description: 'Find your perfect match on Wedly',
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -15,7 +18,7 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   openGraph: {
-    title:       'Wedly — लोधी समाज विवाह',
+    title:       'Wedly — Find Your Forever',
     description: 'Find your perfect match on Wedly',
     url:         'https://www.wedly.co.in',
     siteName:    'Wedly',
@@ -37,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
 
         {children}
+         <IncomingCallBanner /> 
         <Toaster
           position="top-right"
           toastOptions={{
@@ -53,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             success: { iconTheme: { primary: '#f97316', secondary: '#fff' } },
             error: { iconTheme: { primary: '#e11d48', secondary: '#fff' } },
           }}
+          
         />
       </body>
     </html>

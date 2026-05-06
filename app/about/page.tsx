@@ -1,158 +1,84 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
-import { Heart, Users, Shield, Globe, Star, Target } from 'lucide-react'
 
 export default function AboutPage() {
   return (
-    <>
-      <Navbar />
-      <main className="pt-20 min-h-screen bg-cream">
+    <div className="min-h-screen bg-[#fffaf6]">
+      <Navbar/>
+      <div className="pt-20">
 
         {/* Hero */}
-        <div className="bg-gradient-to-br from-saffron-800 via-saffron-700 to-saffron-500 py-20">
-          <div className="container text-center">
-            <div className="text-5xl mb-4">💑</div>
-            <h1 className="text-4xl sm:text-5xl font-black text-white mb-4">
-              About Wedly
+        <div className="bg-[#7c2d12] py-16 sm:py-24 px-4 sm:px-8 text-center relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10"
+            style={{ backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.4) 1px,transparent 1px)', backgroundSize:'22px 22px' }}/>
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <p className="text-orange-300/70 text-[11px] font-semibold tracking-[3px] uppercase mb-4">Our Story</p>
+            <h1 className="text-3xl sm:text-5xl font-black text-white mb-4 leading-tight"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1.5px' }}>
+              एक मंच।<br/>
+              <em className="text-orange-300" style={{ fontStyle:'italic', fontWeight:300 }}>सबके लिए।</em>
             </h1>
-            <p className="text-white/80 text-lg max-w-2xl mx-auto leading-relaxed">
-              A community-driven matrimony platform built with love —
-              connecting hearts within communities across India.
+            <p className="text-orange-200/60 text-sm sm:text-base leading-relaxed">
+              Wedly was built with one mission — to give every Indian community a safe, verified, and modern matrimony platform that they can trust.
             </p>
           </div>
         </div>
 
-        {/* Our Story */}
-        <div className="container py-16">
-          <div className="max-w-3xl mx-auto">
-
-            <div className="card p-8 mb-8">
-              <h2 className="text-2xl font-black text-stone-900 mb-4">Our Story</h2>
-              <p className="text-stone-600 leading-relaxed mb-4">
-                There are millions of people across India who deeply value their roots,
-                their culture, and their community. They celebrate their traditions,
-                take pride in their heritage, and when it comes to finding a life partner —
-                they want someone who truly understands and shares that same world.
-              </p>
-              <p className="text-stone-600 leading-relaxed mb-4">
-                For them, finding a partner within their own community is not a limitation —
-                it's a <strong>beautiful choice</strong>. A choice to build a family grounded
-                in shared values, shared festivals, shared language, and a shared way of life.
-              </p>
-              <p className="text-stone-600 leading-relaxed mb-4">
-                <strong>Wedly</strong> was built for these people. We started with
-                <strong> Lodhi Kshatriya Samaj</strong> — one of India's most proud and
-                vibrant communities — with a mission to give every member a trusted,
-                modern platform to find their ideal match within their own community.
-              </p>
-              <p className="text-stone-600 leading-relaxed">
-                Today, Wedly is growing into a platform for <strong>all communities</strong> —
-                because every community deserves a space where their culture is celebrated,
-                their values are respected, and love finds its perfect home.
+        {/* Mission */}
+        <div className="max-w-3xl mx-auto px-4 sm:px-8 py-14 sm:py-20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-14">
+            <div>
+              <h2 className="text-2xl font-black text-[#431407] mb-4"
+                style={{ fontFamily:'Georgia,serif' }}>Our Mission</h2>
+              <p className="text-stone-500 text-sm leading-relaxed">
+                Traditional matrimony relied on brokers, WhatsApp groups, and word-of-mouth — slow, inefficient, and often unsafe. Wedly changes that. We give families a trusted digital platform with verified profiles, direct chat, and community-first matching. No middlemen. No fake profiles.
               </p>
             </div>
-
-            {/* Vision */}
-            <div className="card p-8 mb-8 bg-gradient-to-br from-saffron-50 to-yellow-50 border-2 border-saffron-100">
-              <div className="flex items-center gap-3 mb-4">
-                <Target className="w-6 h-6 text-saffron-600" />
-                <h2 className="text-2xl font-black text-stone-900">Our Vision</h2>
-              </div>
-              <p className="text-stone-700 leading-relaxed text-lg italic">
-                "To become India's most trusted community-driven matrimony platform —
-                where every community can connect, celebrate their culture, and find
-                life partners who share their values."
+            <div>
+              <h2 className="text-2xl font-black text-[#431407] mb-4"
+                style={{ fontFamily:'Georgia,serif' }}>हमारा उद्देश्य</h2>
+              <p className="text-stone-500 text-sm leading-relaxed">
+                भारत के हर समाज के लिए एक सुरक्षित, सत्यापित और आधुनिक विवाह मंच बनाना — जहाँ परिवार को भरोसा हो, बातचीत सीधी हो, और जीवनसाथी मिलना आसान हो।
               </p>
-            </div>
-
-            {/* Values */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-              {[
-                {
-                  icon: Shield,
-                  color: 'bg-blue-50 text-blue-600',
-                  title: 'Trust & Safety',
-                  desc: 'Every profile is manually verified by our team before going live.'
-                },
-                {
-                  icon: Heart,
-                  color: 'bg-pink-50 text-pink-600',
-                  title: 'Community First',
-                  desc: 'Built for communities, by communities. We celebrate your culture.'
-                },
-                {
-                  icon: Globe,
-                  color: 'bg-emerald-50 text-emerald-600',
-                  title: 'Expanding Together',
-                  desc: 'Starting with Lodhi Samaj, growing to serve all communities.'
-                },
-              ].map(({ icon: Icon, color, title, desc }) => (
-                <div key={title} className="card p-6 text-center">
-                  <div className={`w-12 h-12 ${color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-stone-900 mb-2">{title}</h3>
-                  <p className="text-stone-500 text-sm leading-relaxed">{desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Currently serving */}
-            <div className="card p-8 mb-8">
-              <div className="flex items-center gap-3 mb-5">
-                <Users className="w-6 h-6 text-saffron-600" />
-                <h2 className="text-2xl font-black text-stone-900">Currently Serving</h2>
-              </div>
-              <div className="flex items-center gap-4 p-4 bg-saffron-50 rounded-2xl border border-saffron-100 mb-4">
-                <div className="w-12 h-12 bg-saffron-500 rounded-xl flex items-center justify-center text-white font-black text-lg">
-                  L
-                </div>
-                <div>
-                  <p className="font-bold text-stone-900">Lodhi Kshatriya Samaj</p>
-                  <p className="text-stone-500 text-sm">
-                    Madhya Pradesh, Chhattisgarh, Maharashtra, Uttar Pradesh & more
-                  </p>
-                </div>
-                <span className="ml-auto bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">
-                  Active ✓
-                </span>
-              </div>
-              <p className="text-stone-400 text-sm">
-                More communities coming soon — Kurmi, Patel, Rajput, and many more.
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-              {[
-                { val: '2000+', label: 'Profiles' },
-                { val: '500+', label: 'Marriages' },
-                { val: '10+', label: 'States' },
-                { val: '100%', label: 'Free to Join' },
-              ].map(({ val, label }) => (
-                <div key={label} className="card p-5 text-center">
-                  <div className="text-2xl font-black text-saffron-600">{val}</div>
-                  <div className="text-stone-400 text-xs mt-1">{label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <div className="card p-8 text-center bg-gradient-to-br from-saffron-800 to-saffron-600">
-              <div className="text-4xl mb-3">🌟</div>
-              <h3 className="text-2xl font-black text-white mb-2">Join Wedly Today</h3>
-              <p className="text-white/75 mb-5">
-                Be part of India's fastest growing community matrimony platform.
-              </p>
-              <Link href="/login" className="btn btn-white btn-lg">
-                Register Free — Start Now
-              </Link>
             </div>
           </div>
+
+          {/* Values */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-14">
+            {[
+              { icon:'🔒', title:'Trust',     hindi:'भरोसा',   desc:'Every profile verified by our team.' },
+              { icon:'🆓', title:'Free',      hindi:'मुफ्त',   desc:'Free forever to register and browse.' },
+              { icon:'🏘️', title:'Community', hindi:'समाज',    desc:'Built for your community, your values.' },
+              { icon:'💬', title:'Direct',    hindi:'सीधा',    desc:'Chat and connect without middlemen.' },
+            ].map(v => (
+              <div key={v.title} className="bg-white rounded-2xl p-5 border border-orange-100 text-center">
+                <div className="text-3xl mb-3">{v.icon}</div>
+                <div className="font-bold text-stone-800 text-sm">{v.title}</div>
+                <div className="text-orange-500 text-[10px] font-medium mb-2">{v.hindi}</div>
+                <div className="text-stone-400 text-xs leading-relaxed">{v.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Communities */}
+          <div className="bg-[#7c2d12] rounded-3xl p-6 sm:p-10 text-center">
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-3"
+              style={{ fontFamily:'Georgia,serif' }}>
+              Growing for every community
+            </h2>
+            <p className="text-orange-200/60 text-sm mb-6 max-w-md mx-auto">
+              Currently serving Lodhi Kshatriya. Expanding to 20+ communities across India.
+            </p>
+            <Link href="/register"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400
+                         text-white font-bold px-8 py-3.5 rounded-2xl transition-colors text-sm">
+              Join Wedly Free →
+            </Link>
+          </div>
         </div>
-      </main>
-      <Footer />
-    </>
+      </div>
+      <Footer/>
+    </div>
   )
 }

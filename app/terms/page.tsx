@@ -3,98 +3,35 @@ import Footer from '@/components/Footer'
 
 export default function TermsPage() {
   return (
-    <>
+    <div className="min-h-screen bg-[#fffaf6]">
       <Navbar/>
-      <main className="pt-20 min-h-screen bg-cream">
-        <div className="bg-gradient-to-r from-saffron-800 to-saffron-600 py-14">
-          <div className="container text-center">
-            <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Terms of Service</h1>
-            <p className="text-white/70">Last updated: April 2026</p>
+      <div className="pt-20 pb-16 px-4 sm:px-8">
+        <div className="max-w-2xl mx-auto py-12">
+          <div className="text-center mb-10">
+            <p className="text-orange-500 text-[11px] font-semibold tracking-[3px] uppercase mb-3">Legal</p>
+            <h1 className="text-3xl font-black text-[#431407]"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1px' }}>Terms of Use</h1>
+            <p className="text-stone-400 text-sm mt-2">Last updated: January 2025</p>
           </div>
-        </div>
-
-        <div className="container py-12">
-          <div className="max-w-3xl mx-auto card p-8 space-y-8">
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">1. Acceptance of Terms</h2>
-              <p className="text-stone-600 leading-relaxed">
-                By creating an account on Wedly, you agree to these Terms of Service.
-                If you do not agree, please do not use our platform.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">2. Eligibility</h2>
-              <ul className="text-stone-600 space-y-2">
-                <li>• You must be at least 18 years of age</li>
-                <li>• You must be legally eligible to marry</li>
-                <li>• You must provide accurate and truthful information</li>
-                <li>• One account per person only</li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">3. Profile Guidelines</h2>
-              <ul className="text-stone-600 space-y-2">
-                <li>• All information must be genuine and accurate</li>
-                <li>• Photos must be recent and clearly show your face</li>
-                <li>• Do not impersonate others or use fake information</li>
-                <li>• Profiles with false information will be removed immediately</li>
-                <li>• We reserve the right to approve or reject any profile</li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">4. Prohibited Activities</h2>
-              <ul className="text-stone-600 space-y-2">
-                <li>• Creating fake or misleading profiles</li>
-                <li>• Harassing or spamming other members</li>
-                <li>• Sharing contact details obtained from the platform for commercial purposes</li>
-                <li>• Using the platform for anything other than matrimony purposes</li>
-                <li>• Attempting to hack or disrupt our services</li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">5. Premium Plans</h2>
-              <ul className="text-stone-600 space-y-2">
-                <li>• Silver Plan: ₹199 for 1 month</li>
-                <li>• Gold Plan: ₹399 for 3 months</li>
-                <li>• Payments are non-refundable once activated</li>
-                <li>• Plans are activated manually within 24 hours of payment confirmation</li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">6. Account Termination</h2>
-              <p className="text-stone-600 leading-relaxed">
-                We reserve the right to suspend or terminate accounts that violate these terms,
-                contain false information, or engage in inappropriate behavior without prior notice.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">7. Disclaimer</h2>
-              <p className="text-stone-600 leading-relaxed">
-                Wedly is a platform to connect potential matches. We do not guarantee
-                successful marriages or relationships. Users are responsible for conducting
-                their own due diligence before meeting anyone in person.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">8. Contact</h2>
-              <div className="p-4 bg-saffron-50 rounded-xl">
-                <p className="font-semibold text-stone-800">📧 support@wedly.co.in</p>
-                <p className="text-stone-500 text-sm">🌐 www.wedly.co.in</p>
+          <div className="bg-white rounded-3xl border border-orange-100 p-6 sm:p-8 space-y-6">
+            {[
+              { title:'Eligibility', content:'You must be 18 years or older to register on Wedly. By creating an account you confirm you are of legal age and the information provided is accurate.' },
+              { title:'Genuine Profiles Only', content:'All information in your profile must be truthful and accurate. Fake profiles, misleading information or impersonating others will result in immediate account suspension without refund.' },
+              { title:'Respectful Conduct', content:'All users are expected to communicate respectfully. Harassment, abuse, obscene content or any form of inappropriate behavior will result in permanent ban. We have a zero-tolerance policy.' },
+              { title:'Premium Plans', content:'Premium subscriptions are billed monthly. Cancellation stops future billing but does not provide refunds for the current period. Plans can be upgraded or changed at any time.' },
+              { title:'Platform Usage', content:'Wedly is a matrimony platform only. Using the platform for commercial solicitation, spam, or any purpose other than finding a life partner is strictly prohibited.' },
+              { title:'Limitation of Liability', content:'Wedly facilitates connections between users but is not responsible for the outcome of those connections. We strongly encourage users to meet in safe, public places and involve family members.' },
+              { title:'Contact', content:'For any terms-related questions, contact us at support@wedly.co.in.' },
+            ].map(s => (
+              <div key={s.title}>
+                <h2 className="font-bold text-stone-800 text-base mb-2">{s.title}</h2>
+                <p className="text-stone-500 text-sm leading-relaxed">{s.content}</p>
               </div>
-            </div>
-
+            ))}
           </div>
         </div>
-      </main>
+      </div>
       <Footer/>
-    </>
+    </div>
   )
 }

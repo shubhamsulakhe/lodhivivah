@@ -3,102 +3,34 @@ import Footer from '@/components/Footer'
 
 export default function PrivacyPage() {
   return (
-    <>
+    <div className="min-h-screen bg-[#fffaf6]">
       <Navbar/>
-      <main className="pt-20 min-h-screen bg-cream">
-        <div className="bg-gradient-to-r from-saffron-800 to-saffron-600 py-14">
-          <div className="container text-center">
-            <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Privacy Policy</h1>
-            <p className="text-white/70">Last updated: April 2026</p>
+      <div className="pt-20 pb-16 px-4 sm:px-8">
+        <div className="max-w-2xl mx-auto py-12">
+          <div className="text-center mb-10">
+            <p className="text-orange-500 text-[11px] font-semibold tracking-[3px] uppercase mb-3">Legal</p>
+            <h1 className="text-3xl font-black text-[#431407]"
+              style={{ fontFamily:'Georgia,serif', letterSpacing:'-1px' }}>Privacy Policy</h1>
+            <p className="text-stone-400 text-sm mt-2">Last updated: January 2026</p>
           </div>
-        </div>
-
-        <div className="container py-12">
-          <div className="max-w-3xl mx-auto card p-8 space-y-8">
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">1. Information We Collect</h2>
-              <p className="text-stone-600 leading-relaxed">
-                We collect information you provide when creating a profile including your name,
-                date of birth, email address, phone number, photos, family details, education,
-                and occupation. We also collect usage data to improve our services.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">2. How We Use Your Information</h2>
-              <ul className="text-stone-600 space-y-2 leading-relaxed">
-                <li>• To display your profile to potential matches within the platform</li>
-                <li>• To send you notifications about interests and matches</li>
-                <li>• To verify your identity and prevent fake profiles</li>
-                <li>• To improve our platform and user experience</li>
-                <li>• To send important updates about your account</li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">3. Information Sharing</h2>
-              <p className="text-stone-600 leading-relaxed mb-3">
-                Your contact details (phone number, WhatsApp) are only visible to:
-              </p>
-              <ul className="text-stone-600 space-y-2">
-                <li>• <strong>Premium members</strong> — can view contact details of all approved profiles</li>
-                <li>• <strong>Free members</strong> — get 1 free contact view on mutual match</li>
-                <li>• We <strong>never sell</strong> your data to third parties</li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">4. Profile Approval</h2>
-              <p className="text-stone-600 leading-relaxed">
-                All profiles are manually reviewed by our admin team before being made visible.
-                We reserve the right to reject profiles that violate our community guidelines
-                or contain false information.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">5. Data Security</h2>
-              <p className="text-stone-600 leading-relaxed">
-                We use industry-standard security measures including encrypted connections (HTTPS),
-                secure database storage via Supabase, and access controls to protect your data.
-                Your password is encrypted and never stored in plain text.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">6. Your Rights</h2>
-              <ul className="text-stone-600 space-y-2">
-                <li>• Request deletion of your account and data</li>
-                <li>• Update or correct your profile information anytime</li>
-                <li>• Opt out of marketing communications</li>
-                <li>• Request a copy of your data</li>
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">7. Cookies</h2>
-              <p className="text-stone-600 leading-relaxed">
-                We use essential cookies to keep you logged in and improve your experience.
-                We do not use advertising or tracking cookies.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-stone-900 mb-3">8. Contact Us</h2>
-              <p className="text-stone-600 leading-relaxed">
-                For any privacy concerns, please contact us at:
-              </p>
-              <div className="mt-3 p-4 bg-saffron-50 rounded-xl">
-                <p className="font-semibold text-stone-800">📧 support@wedly.co.in</p>
-                <p className="text-stone-500 text-sm">🌐 www.wedly.co.in</p>
+          <div className="bg-white rounded-3xl border border-orange-100 p-6 sm:p-8 space-y-6">
+            {[
+              { title:'Information We Collect', content:'We collect information you provide during registration including name, date of birth, community, mobile number, education, occupation and location. We also collect usage data to improve our services.' },
+              { title:'How We Use Your Information', content:'Your information is used to create and display your matrimony profile to other registered members, facilitate connections between compatible matches, send notifications about interests and messages, and improve our platform.' },
+              { title:'Profile Visibility', content:'Your profile is visible to registered and verified members on Wedly. Your mobile number is only shared when both parties agree. Photos are visible to logged-in members only.' },
+              { title:'Data Security', content:'All data is stored securely using Supabase (enterprise-grade database). We use industry-standard encryption. Passwords are never stored in plain text.' },
+              { title:'Your Rights', content:'You can edit or delete your profile at any time from Dashboard → Edit Profile. To permanently delete all your data, email support@wedly.co.in. We will process requests within 7 business days.' },
+              { title:'Contact', content:'For privacy concerns, email us at support@wedly.co.in. We take all privacy matters seriously and respond within 48 hours.' },
+            ].map(s => (
+              <div key={s.title}>
+                <h2 className="font-bold text-stone-800 text-base mb-2">{s.title}</h2>
+                <p className="text-stone-500 text-sm leading-relaxed">{s.content}</p>
               </div>
-            </div>
-
+            ))}
           </div>
         </div>
-      </main>
+      </div>
       <Footer/>
-    </>
+    </div>
   )
 }

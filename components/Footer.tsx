@@ -1,101 +1,110 @@
 import Link from 'next/link'
 import Logo from './Logo'
-import { Phone, Mail, MapPin, Heart } from 'lucide-react'
 
 export default function Footer() {
   return (
-    <footer className="bg-stone-950 text-stone-300">
-      <div className="container py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="md:col-span-1">
-            <Logo variant="light" className="mb-4" />
-            <p className="text-stone-400 text-sm leading-relaxed mt-4">
-              लोधी समाज का प्रमुख विवाह पोर्टल।<br />
-              Kirnapur, Balaghat (M.P.) द्वारा संचालित।
+    <footer className="bg-[#1a0800] text-white">
+      {/* Main footer */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+
+          {/* Brand */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <Logo variant="light" size="md" showTagline className="mb-4"/>
+            <p className="text-white/40 text-sm leading-relaxed mb-4 max-w-xs">
+              India's most trusted community matrimony platform. Verified profiles, live chat, voice calls — free to join.
             </p>
-            <div className="flex gap-3 mt-5">
+            <p className="text-orange-400/60 text-xs">
+              भारत का सबसे भरोसेमंद<br/>समाज विवाह मंच।
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 className="text-white/80 text-xs font-semibold uppercase tracking-widest mb-4">Platform</h4>
+            <div className="flex flex-col gap-2.5">
               {[
-                { label: 'WhatsApp', href: 'https://wa.me/918770607574', color: 'bg-green-600', icon: '💬' },
-                { label: 'Call', href: 'tel:+918770607574', color: 'bg-saffron-600', icon: '📞' },
-              ].map(({ label, href, color, icon }) => (
-                <a key={label} href={href} target="_blank" rel="noopener noreferrer"
-                  className={`${color} text-white text-xs font-semibold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity`}>
-                  {icon} {label}
-                </a>
+                { href:'/profiles',  label:'Browse Profiles',  hindi:'प्रोफाइल देखें' },
+                { href:'/register',  label:'Register Free',    hindi:'मुफ्त रजिस्टर'  },
+                { href:'/login',     label:'Login',            hindi:'लॉगिन'           },
+                { href:'/premium',   label:'Premium Plans',    hindi:'प्रीमियम प्लान' },
+                { href:'/chat',      label:'Messages',         hindi:'मैसेज'           },
+                { href:'/dashboard', label:'Dashboard',        hindi:'डैशबोर्ड'        },
+              ].map(l => (
+                <Link key={l.href} href={l.href}
+                  className="text-white/40 hover:text-white text-sm transition-colors flex items-center gap-2 group">
+                  <span className="group-hover:translate-x-0.5 transition-transform">{l.label}</span>
+                  <span className="text-[10px] text-white/20 group-hover:text-orange-400/50 transition-colors">{l.hindi}</span>
+                </Link>
               ))}
             </div>
           </div>
 
+          {/* Communities */}
           <div>
-            <h4 className="font-bold text-white text-sm mb-4">Quick Links</h4>
-            <ul className="space-y-2.5">
+            <h4 className="text-white/80 text-xs font-semibold uppercase tracking-widest mb-4">Communities</h4>
+            <div className="flex flex-col gap-2.5">
               {[
-                ['/profiles', 'Browse Profiles'],
-                ['/profiles?gender=female', 'Brides (वधू)'],
-                ['/profiles?gender=male', 'Grooms (वर)'],
-                ['/login', 'Register Free'],
-                ['/premium', 'Premium Plans'],
-              ].map(([href, label]) => (
-                <li key={href}>
-                  <Link href={href} className="text-stone-400 hover:text-saffron-400 text-sm transition-colors">
-                    → {label}
-                  </Link>
-                </li>
+                { name:'Lodhi Kshatriya', hindi:'लोधी क्षत्रिय', active:true  },
+                { name:'Yadav Samaj',     hindi:'यादव समाज',     active:false },
+                { name:'Kurmi Samaj',     hindi:'कुर्मी समाज',   active:false },
+                { name:'Kirar Samaj',     hindi:'किरार समाज',    active:false },
+                { name:'Rajput Samaj',    hindi:'राजपूत समाज',   active:false },
+                { name:'+ More coming',  hindi:'और जल्द',        active:false },
+              ].map(c => (
+                <div key={c.name} className="flex items-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.active ? 'bg-emerald-400' : 'bg-white/20'}`}/>
+                  <span className={`text-sm ${c.active ? 'text-white/70' : 'text-white/35'}`}>{c.name}</span>
+                  {c.active && <span className="text-[9px] text-emerald-400/70 font-medium">Live</span>}
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
 
+          {/* Company */}
           <div>
-            <h4 className="font-bold text-white text-sm mb-4">Information</h4>
-            <ul className="space-y-2.5">
+            <h4 className="text-white/80 text-xs font-semibold uppercase tracking-widest mb-4">Company</h4>
+            <div className="flex flex-col gap-2.5">
               {[
-                ['/about', 'About Us'],
-                ['/contact', 'Contact'],
-                ['/help', 'Help & FAQ'],
-                ['/privacy', 'Privacy Policy'],
-                ['/terms', 'Terms of Service'],
-              ].map(([href, label]) => (
-                <li key={href}>
-                  <Link href={href} className="text-stone-400 hover:text-saffron-400 text-sm transition-colors">
-                    → {label}
-                  </Link>
-                </li>
+                { href:'/about',   label:'About Wedly'    },
+                { href:'/contact', label:'Contact Us'     },
+                { href:'/help',    label:'Help Center'    },
+                { href:'/privacy', label:'Privacy Policy' },
+                { href:'/terms',   label:'Terms of Use'   },
+              ].map(l => (
+                <Link key={l.href} href={l.href}
+                  className="text-white/40 hover:text-white text-sm transition-colors">
+                  {l.label}
+                </Link>
               ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-white text-sm mb-4">Contact Us</h4>
-            <ul className="space-y-4">
-              <li className="flex gap-3 text-sm text-stone-400">
-                <MapPin className="w-4 h-4 text-saffron-500 flex-shrink-0 mt-0.5" />
-                Kirnapur, Balaghat, MP
-              </li>
-              <li>
-                <a href="tel:+918770607574" className="flex gap-3 text-sm text-stone-400 hover:text-saffron-400 transition-colors">
-                  <Phone className="w-4 h-4 text-saffron-500 flex-shrink-0" />
-                  +91 8770607574
-                </a>
-              </li>
-              <li>
-                <a href="mailto:support@wedly.co.in" className="flex gap-3 text-sm text-stone-400 hover:text-saffron-400 transition-colors">
-                  <Mail className="w-4 h-4 text-saffron-500 flex-shrink-0" />
-                  support@wedly.co.in
-                </a>
-              </li>
-            </ul>
-            <div className="mt-5 p-3 bg-stone-900 rounded-xl text-xs text-stone-500">
-              Reg. No: 00/00/00/0000/00
+            </div>
+            <div className="mt-6 pt-5 border-t border-white/8">
+              <p className="text-white/30 text-xs mb-2">Support</p>
+              <a href="mailto:support@wedly.co.in"
+                className="text-orange-400/60 hover:text-orange-400 text-xs transition-colors block">
+                support@wedly.co.in
+              </a>
+              <a href="https://wedly.co.in" target="_blank"
+                className="text-orange-400/60 hover:text-orange-400 text-xs transition-colors block mt-1">
+                wedly.co.in
+              </a>
             </div>
           </div>
         </div>
       </div>
-      <div className="border-t border-stone-800">
-        <div className="container py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-stone-500 text-xs">© 2026 Wedly. All rights reserved.</p>
-          <p className="text-stone-600 text-xs flex items-center gap-1">
-            Made with <Heart className="w-3 h-3 text-red-500 fill-red-500" /> for Lodhi Samaj
+
+      {/* Bottom bar */}
+      <div className="border-t border-white/6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex flex-col sm:flex-row
+                        items-center justify-between gap-3">
+          <p className="text-white/25 text-xs text-center sm:text-left">
+            © 2026 Wedly. Made with ❤️ for Indian communities · भारतीय समाज के लिए
           </p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-white/25 hover:text-white/50 text-xs transition-colors">Privacy</Link>
+            <Link href="/terms"   className="text-white/25 hover:text-white/50 text-xs transition-colors">Terms</Link>
+            <Link href="/contact" className="text-white/25 hover:text-white/50 text-xs transition-colors">Contact</Link>
+          </div>
         </div>
       </div>
     </footer>
