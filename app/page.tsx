@@ -486,9 +486,9 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { name:'Free',   hindi:'मुफ्त',  price:'₹0',   period:'forever',  features:['Profile create','Browse all profiles','2 interests/day','Basic chat'], highlight:false },
-              { name:'Silver', hindi:'सिल्वर', price:'₹199', period:'/month',   features:['Everything in Free','Unlimited interests','View contacts','Priority listing'], highlight:true  },
-              { name:'Gold',   hindi:'गोल्ड',  price:'₹399', period:'/month',   features:['Everything in Silver','Voice calls 📞','See profile viewers','Gold badge ✦'], highlight:false },
+              { name:'Free',   hindi:'मुफ्त',  price:'₹0',   period:'forever',  features:['Profile create','Verified profile','Browse all profiles','2 interests/day','Basic chat'], highlight:false },
+              { name:'Silver', hindi:'सिल्वर', price:'₹199', period:'/month',   features:['Everything in Free','Browse own community (Unlimited)','Unlimited interests','View contacts','Priority listing'], highlight:true  },
+              { name:'Gold',   hindi:'गोल्ड',  price:'₹399', period:'/month',   features:['Everything in Silver','Browse all communities','Voice & Video calls 📞','See profile viewers','Gold badge ✦'], highlight:false },
             ].map(plan => (
               <div key={plan.name}
                 className={`rounded-2xl p-5 border transition-all
