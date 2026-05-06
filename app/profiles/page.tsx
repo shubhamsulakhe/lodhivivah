@@ -129,7 +129,7 @@ export default function ProfilesPage() {
         sender_id: myProfile.id, receiver_id: receiverId, status: 'pending'
       })
       if (error) throw error
-      setSentInterests(p => new Set([...p, receiverId]))
+      setSentInterests(p => new Set(Array.from(p).concat(receiverId)))
       toast.success('Interest sent! 💝')
 
       // Notify receiver
