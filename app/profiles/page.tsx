@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 const COMMUNITIES = [
   { value: 'all', label: 'All Communities' },
   { value: 'lodhi_kshatriya', label: 'Lodhi Kshatriya' },
-  { value: 'pawar_kunbi', label: 'Pawar Kunbi' },
+  { value: 'pawar', label: 'Pawar Samaj' },
   { value: 'kirar', label: 'Kirar Samaj' },
   { value: 'kurmi', label: 'Kurmi Samaj' },
   { value: 'teli', label: 'Teli Samaj' },

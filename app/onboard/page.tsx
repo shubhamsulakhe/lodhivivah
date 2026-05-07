@@ -18,9 +18,9 @@ const COMMUNITIES = [
     { value: 'teli', label: 'Teli Samaj', hindi: 'तेली समाज', active: true },
     { value: 'yadav', label: 'Yadav Samaj', hindi: 'यादव समाज', active: true },
     { value: 'gond', label: 'Gond Samaj', hindi: 'गोंड समाज', active: true },
-    { value: 'rajput', label: 'Rajput Samaj', hindi: 'राजपूत समाज', active: false },
-    { value: 'brahmin', label: 'Brahmin Samaj', hindi: 'ब्राह्मण समाज', active: false },
-    { value: 'kshatriya', label: 'Kshatriya Samaj', hindi: 'क्षत्रिय समाज', active: false },
+    { value: 'rajput', label: 'Rajput Samaj', hindi: 'राजपूत समाज', active: true },
+    { value: 'brahmin', label: 'Brahmin Samaj', hindi: 'ब्राह्मण समाज', active: true },
+    { value: 'kshatriya', label: 'Kshatriya Samaj', hindi: 'क्षत्रिय समाज', active: true },
     { value: 'other', label: 'Other Community', hindi: 'अन्य समाज', active: true },
 ]
 

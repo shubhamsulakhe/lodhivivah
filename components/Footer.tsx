@@ -46,10 +46,10 @@ export default function Footer() {
             <div className="flex flex-col gap-2.5">
               {[
                 { name:'Lodhi Kshatriya', hindi:'लोधी क्षत्रिय', active:true  },
-                { name:'Yadav Samaj',     hindi:'यादव समाज',     active:false },
-                { name:'Kurmi Samaj',     hindi:'कुर्मी समाज',   active:false },
-                { name:'Kirar Samaj',     hindi:'किरार समाज',    active:false },
-                { name:'Rajput Samaj',    hindi:'राजपूत समाज',   active:false },
+                { name:'Yadav Samaj',     hindi:'यादव समाज',     active:true },
+                { name:'Kurmi Samaj',     hindi:'कुर्मी समाज',   active:true },
+                { name:'Kirar Samaj',     hindi:'किरार समाज',    active:true },
+                { name:'Rajput Samaj',    hindi:'राजपूत समाज',   active:true },
                 { name:'+ More coming',  hindi:'और जल्द',        active:false },
               ].map(c => (
                 <div key={c.name} className="flex items-center gap-2">

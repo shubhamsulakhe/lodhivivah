@@ -17,7 +17,7 @@ import toast from 'react-hot-toast'
 
 const COMMUNITY_LABELS: Record<string, string> = {
   lodhi_kshatriya: 'Lodhi Kshatriya',
-  pawar_kunbi: 'Pawar Kunbi',
+  pawar_kunbi: 'Pawar Samaj',
   yadav: 'Yadav Samaj',
   kurmi: 'Kurmi Samaj',
   kirar: 'Kirar Samaj',
