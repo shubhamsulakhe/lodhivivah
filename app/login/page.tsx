@@ -293,7 +293,7 @@ export default function LoginPage() {
                         placeholder="Your password" className="input pr-11 text-sm" />
                       <button type="button" onClick={() => setShowPass(p => !p)}
                         className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400">
-                        
+                        {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
