@@ -52,7 +52,7 @@ export default function ProfileDetailPage() {
     if (!user) { router.push('/login'); return }
 
     const { data: me } = await supabase
-      .from('profiles').select('*').eq('user_id', user.id).single()
+      .from('profiles').select('*').eq('user_id', user.id).maybeSingle()
     if (!me) { router.push('/onboard'); return }
     setMyProfile(me)
 

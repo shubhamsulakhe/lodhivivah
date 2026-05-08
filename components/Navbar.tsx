@@ -21,7 +21,7 @@ export default function Navbar() {
       setUser(user)
       if (user) {
         supabase.from('profiles').select('name,photo_url,plan,is_premium,id')
-          .eq('user_id', user.id).single()
+          .eq('user_id', user.id).maybeSingle()
           .then(({ data }) => setProfile(data))
       }
     })

@@ -45,7 +45,7 @@ export default function ProfileEditPage() {
   async function loadProfile() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
-    const { data: prof } = await supabase.from('profiles').select('*').eq('user_id', user.id).single()
+    const { data: prof } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle()
     if (!prof) { router.push('/register'); return }
     setProfile(prof)
     setForm({ ...prof })

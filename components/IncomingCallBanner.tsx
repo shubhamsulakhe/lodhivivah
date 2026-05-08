@@ -33,7 +33,7 @@ export default function IncomingCallBanner() {
         const user = session.user
         if (!user) return
         const { data: profile } = await supabase
-            .from('profiles').select('id').eq('user_id', user.id).single()
+            .from('profiles').select('id').eq('user_id', user.id).maybeSingle()
         if (!profile) return
         setProfileId(profile.id)
 

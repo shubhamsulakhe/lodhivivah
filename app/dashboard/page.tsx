@@ -34,7 +34,7 @@ function DashboardContent() {
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
-    const { data: prof } = await supabase.from('profiles').select('*').eq('user_id', user.id).single()
+    const { data: prof } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle()
     if (!prof) { router.push('/register'); return }
     setProfile(prof)
     setLoading(false)
@@ -70,7 +70,7 @@ function DashboardContent() {
           user1_id: profile.id, user2_id: senderId,
           last_message_at: new Date().toISOString(),
         }).select('id').single()
-        
+
         if (!chatErr) toast.success('💬 Chat unlocked! Go to Messages to say hello.', { duration: 4000 })
         // Notify sender their interest was accepted
         await Notifications.interestAccepted(senderId, profile.name, chatData?.id || '')
