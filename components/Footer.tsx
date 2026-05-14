@@ -45,7 +45,7 @@ export default function Footer() {
             <h4 className="text-white/80 text-xs font-semibold uppercase tracking-widest mb-4">Communities</h4>
             <div className="flex flex-col gap-2.5">
               {[
-                { name:'Lodhi Kshatriya', hindi:'लोधी क्षत्रिय', active:true  },
+                { name:'Lodhi Kshatriyaa', hindi:'लोधी क्षत्रिय', active:true  },
                 { name:'Yadav Samaj',     hindi:'यादव समाज',     active:true },
                 { name:'Kurmi Samaj',     hindi:'कुर्मी समाज',   active:true },
                 { name:'Kirar Samaj',     hindi:'किरार समाज',    active:true },
