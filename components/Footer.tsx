@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="sm:col-span-2 lg:col-span-1">
             <Logo variant="light" size="md" showTagline className="mb-4"/>
             <p className="text-white/40 text-sm leading-relaxed mb-4 max-w-xs">
-              India's trusted community matrimony platform. Verified profiles, live chat, voice calls — free to join.
+              India's most trusted community matrimony platform. Verified profiles, live chat, voice calls — free to join.
             </p>
             <p className="text-orange-400/60 text-xs">
               भारत का सबसे भरोसेमंद<br/>समाज विवाह मंच।
